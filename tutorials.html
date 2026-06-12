@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#070809">
+<title>Tutorials — AlphaEdge Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:    #070809;
+  --surface:  #0d1117;
+  --surface2: #131920;
+  --border:   #1e2a35;
+  --border2:  #243040;
+  --gold:     #c9a84c;
+  --gold2:    #e8c96a;
+  --gold-dim: rgba(201,168,76,0.12);
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --blue:     #3b82f6;
+  --text:     #e8edf2;
+  --text2:    #8a9bb0;
+  --text3:    #4a5a6a;
+  --radius:   12px;
+  --radius-lg:18px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', sans-serif; background: var(--black); color: var(--text); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--black); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+a { text-decoration: none; }
+
+/* NAV */
+nav { position:fixed; top:0; left:0; right:0; z-index:1000; height:64px; padding:0 2rem; display:flex; align-items:center; justify-content:space-between; background:rgba(7,8,9,0.92); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+.nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:20px; color:var(--text); letter-spacing:-0.5px; }
+.nav-logo span { color:var(--gold); }
+.nav-links { display:flex; gap:2rem; list-style:none; }
+.nav-links a { font-size:13px; font-weight:500; color:var(--text2); transition:color 0.2s; }
+.nav-links a:hover { color:var(--text); }
+.nav-links a.active { color:var(--gold); }
+.nav-cta { background:var(--gold) !important; color:var(--black) !important; padding:8px 20px; border-radius:6px; font-weight:600 !important; }
+.hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:6px; background:none; border:none; }
+.hamburger span { display:block; width:22px; height:2px; background:var(--text); border-radius:2px; transition:all 0.3s; }
+.hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity:0; }
+.hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+.mobile-menu { display:none; position:fixed; top:64px; left:0; right:0; bottom:0; background:var(--black); z-index:999; flex-direction:column; padding:32px 24px; border-top:1px solid var(--border); overflow-y:auto; }
+.mobile-menu.open { display:flex; }
+.mobile-menu a { font-family:'Syne',sans-serif; font-size:24px; font-weight:700; color:var(--text2); padding:16px 0; border-bottom:1px solid var(--border); display:block; transition:color 0.2s; }
+.mobile-menu a:hover { color:var(--gold); }
+.mobile-menu .mobile-cta { margin-top:24px; background:var(--gold); color:var(--black) !important; text-align:center; padding:18px !important; border-radius:var(--radius); font-size:18px !important; }
+
+/* PAGE HERO */
+.page-hero { padding:120px 2rem 60px; background:var(--surface); border-bottom:1px solid var(--border); position:relative; overflow:hidden; }
+.hero-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px); background-size:60px 60px; pointer-events:none; }
+.hero-glow { position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(201,168,76,0.06) 0%,transparent 70%); top:-100px; right:-100px; pointer-events:none; }
+.page-hero-inner { max-width:1200px; margin:0 auto; position:relative; z-index:1; }
+.section-tag { font-family:'DM Mono',monospace; font-size:11px; color:var(--gold); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+.section-tag::before { content:''; display:block; width:20px; height:1px; background:var(--gold); }
+.page-title { font-family:'Syne',sans-serif; font-size:clamp(32px,5vw,56px); font-weight:800; letter-spacing:-2px; line-height:1.05; margin-bottom:16px; }
+.page-title span { color:var(--gold); }
+.page-sub { font-size:16px; color:var(--text2); line-height:1.7; max-width:600px; margin-bottom:28px; }
+.series-badge { display:inline-flex; align-items:center; gap:8px; background:var(--gold-dim); border:1px solid rgba(201,168,76,0.3); padding:8px 16px; border-radius:100px; font-family:'DM Mono',monospace; font-size:11px; color:var(--gold); letter-spacing:0.06em; }
+.series-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+/* PROGRESS STRIP */
+.progress-strip { background:var(--surface2); border-bottom:1px solid var(--border); padding:16px 2rem; }
+.progress-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.progress-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; }
+.progress-track { flex:1; height:4px; background:var(--border); border-radius:2px; min-width:120px; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold2)); border-radius:2px; width:100%; }
+.progress-count { font-family:'DM Mono',monospace; font-size:12px; color:var(--gold); font-weight:500; }
+
+/* MAIN */
+.main { max-width:1200px; margin:0 auto; padding:48px 2rem 80px; }
+
+/* SERIES INTRO */
+.series-intro { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px 32px; margin-bottom:48px; display:flex; align-items:center; gap:24px; position:relative; overflow:hidden; }
+.series-intro::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+.series-intro-icon { font-size:40px; flex-shrink:0; }
+.series-intro h3 { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:6px; }
+.series-intro p { font-size:14px; color:var(--text2); line-height:1.65; }
+
+/* VIDEO LIST */
+.video-list { display:flex; flex-direction:column; gap:16px; }
+
+/* VIDEO ROW */
+.video-row {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:0;
+  overflow:hidden;
+  transition:all 0.25s;
+  cursor:pointer;
+  position:relative;
+}
+.video-row:hover { border-color:rgba(201,168,76,0.35); transform:translateX(4px); box-shadow:0 8px 32px rgba(0,0,0,0.25); }
+.video-row::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--gold); opacity:0; transition:opacity 0.2s; }
+.video-row:hover::before { opacity:1; }
+
+/* EPISODE NUMBER */
+.ep-num {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:0 24px;
+  background:var(--surface2);
+  border-right:1px solid var(--border);
+  min-width:80px;
+}
+.ep-label { font-family:'DM Mono',monospace; font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; }
+.ep-number { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; color:var(--gold); line-height:1; }
+
+/* VIDEO THUMBNAIL (small) */
+.video-thumb-sm {
+  width:160px;
+  min-height:90px;
+  background:var(--surface2);
+  border-right:1px solid var(--border);
+  position:relative;
+  overflow:hidden;
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.video-thumb-sm img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+.thumb-placeholder-sm { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; width:100%; height:100%; padding:16px; }
+.thumb-placeholder-sm .t-icon { font-size:24px; opacity:0.5; }
+.thumb-placeholder-sm .t-text { font-family:'DM Mono',monospace; font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:0.06em; text-align:center; }
+.play-overlay-sm { position:absolute; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s; }
+.video-row:hover .play-overlay-sm { opacity:1; }
+.play-btn-sm { width:36px; height:36px; background:rgba(201,168,76,0.9); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; }
+
+/* VIDEO CONTENT */
+.video-content { padding:20px 24px; display:flex; flex-direction:column; justify-content:center; gap:8px; }
+.video-ep-tag { font-family:'DM Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; }
+.video-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--text); line-height:1.3; }
+.video-desc { font-size:13px; color:var(--text2); line-height:1.65; max-width:600px; }
+.video-tags { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+.tag { font-family:'DM Mono',monospace; font-size:10px; padding:3px 10px; border-radius:100px; border:1px solid; }
+.tag-green { background:rgba(34,197,94,0.08); color:var(--green); border-color:rgba(34,197,94,0.2); }
+.tag-gold { background:rgba(201,168,76,0.08); color:var(--gold); border-color:rgba(201,168,76,0.2); }
+.tag-blue { background:rgba(59,130,246,0.08); color:var(--blue); border-color:rgba(59,130,246,0.2); }
+.tag-red { background:rgba(239,68,68,0.08); color:var(--red); border-color:rgba(239,68,68,0.2); }
+
+/* VIDEO ACTION */
+.video-action { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 24px; gap:8px; border-left:1px solid var(--border); min-width:100px; }
+.watch-btn { background:var(--gold); color:var(--black); border:none; padding:9px 16px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+.watch-btn:hover { background:var(--gold2); }
+.watch-btn.coming { background:transparent; color:var(--text3); border:1px solid var(--border); cursor:default; }
+.watch-btn.coming:hover { background:transparent; }
+.video-duration { font-family:'DM Mono',monospace; font-size:10px; color:var(--text3); }
+
+/* NOTIFY SECTION */
+.notify-section { background:linear-gradient(135deg,var(--surface),#0a1218); border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px; text-align:center; margin-top:48px; position:relative; overflow:hidden; }
+.notify-section::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+.notify-section h3 { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; margin-bottom:10px; }
+.notify-section p { font-size:14px; color:var(--text2); line-height:1.65; margin-bottom:24px; max-width:460px; margin-left:auto; margin-right:auto; }
+.notify-form { display:flex; gap:10px; max-width:400px; margin:0 auto; }
+.notify-input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text); outline:none; transition:border-color 0.2s; }
+.notify-input:focus { border-color:var(--gold); }
+.notify-input::placeholder { color:var(--text3); }
+.notify-btn { background:var(--gold); color:var(--black); border:none; padding:12px 20px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+.notify-btn:hover { background:var(--gold2); }
+
+/* FOOTER */
+footer { background:var(--surface); border-top:1px solid var(--border); padding:40px 2rem; }
+.footer-inner { max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+.footer-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:18px; }
+.footer-logo span { color:var(--gold); }
+.footer-copy { font-size:12px; color:var(--text3); }
+.footer-links { display:flex; gap:16px; list-style:none; }
+.footer-links a { font-size:12px; color:var(--text3); text-decoration:none; transition:color 0.2s; }
+.footer-links a:hover { color:var(--gold); }
+
+/* WHATSAPP */
+.wa-btn { position:fixed; bottom:24px; right:24px; z-index:9000; width:52px; height:52px; background:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(37,211,102,0.4); text-decoration:none; transition:all 0.25s; }
+.wa-btn:hover { transform:scale(1.1); }
+.wa-btn svg { width:26px; height:26px; fill:white; }
+
+/* REVEAL */
+.reveal { opacity:0; transform:translateY(20px); transition:opacity 0.5s ease,transform 0.5s ease; }
+.reveal.visible { opacity:1; transform:translateY(0); }
+
+/* RESPONSIVE */
+@media(max-width:900px) {
+  .nav-links { display:none; }
+  .hamburger { display:flex; }
+  .video-thumb-sm { width:120px; }
+  .ep-num { min-width:60px; padding:0 16px; }
+  .ep-number { font-size:24px; }
+}
+@media(max-width:600px) {
+  nav { padding:0 1.25rem; }
+  .page-hero { padding:100px 1.25rem 48px; }
+  .main { padding:32px 1.25rem 60px; }
+  .video-row { grid-template-columns:1fr; }
+  .ep-num { flex-direction:row; padding:16px 20px; border-right:none; border-bottom:1px solid var(--border); min-width:auto; justify-content:flex-start; gap:10px; }
+  .ep-label { margin-bottom:0; }
+  .ep-number { font-size:20px; }
+  .video-thumb-sm { width:100%; min-height:180px; border-right:none; border-bottom:1px solid var(--border); }
+  .video-content { padding:16px 20px; }
+  .video-action { flex-direction:row; padding:16px 20px; border-left:none; border-top:1px solid var(--border); min-width:auto; justify-content:space-between; }
+  .series-intro { flex-direction:column; text-align:center; padding:24px; }
+  .notify-form { flex-direction:column; }
+  .footer-inner { flex-direction:column; text-align:center; }
+  .footer-links { justify-content:center; flex-wrap:wrap; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">Alpha<span>Edge</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="index.html#features">Features</a></li>
+    <li><a href="index.html#pricing">Pricing</a></li>
+    <li><a href="tutorials.html" class="active">Tutorials</a></li>
+    <li><a href="index.html#enrol" class="nav-cta">Enrol Now</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html" onclick="closeMenu()">Home</a>
+  <a href="index.html#features" onclick="closeMenu()">Features</a>
+  <a href="index.html#pricing" onclick="closeMenu()">Pricing</a>
+  <a href="tutorials.html" onclick="closeMenu()">Tutorials</a>
+  <a href="index.html#enrol" onclick="closeMenu()" class="mobile-cta">Enrol Now →</a>
+</div>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="page-hero-inner">
+    <div class="section-tag">Learning Series</div>
+    <h1 class="page-title">Master the <span>RAY 2 - 3TF</span><br>Indicator</h1>
+    <p class="page-sub">A complete 8-part video series taking you from installation and settings all the way to live trade execution — structured step by step so every piece of the puzzle fits together.</p>
+    <div class="series-badge">
+      <span class="series-dot"></span>
+      8 Videos · Complete Series · All Levels
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS STRIP -->
+<div class="progress-strip">
+  <div class="progress-inner">
+    <span class="progress-label">Series Progress</span>
+    <div class="progress-track"><div class="progress-fill"></div></div>
+    <span class="progress-count">8 / 8 Videos</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SERIES INTRO -->
+  <div class="series-intro reveal">
+    <div class="series-intro-icon">🎓</div>
+    <div>
+      <h3>Complete Learning Series — Watch in Order</h3>
+      <p>These 8 videos are designed as a structured series — each video builds on the previous one. Start from Video 1 and work your way through to Video 8 for the best learning experience. By the end you'll have everything you need to trade confidently with the AlphaEdge indicator.</p>
+    </div>
+  </div>
+
+  <!-- VIDEO LIST -->
+  <div class="video-list">
+
+    <!-- VIDEO 1 -->
+    <div class="video-row reveal" onclick="openVideo('https://youtu.be/p-kuxsetjTU')">
+      <div class="ep-num">
+        <span class="ep-label">Part</span>
+        <span class="ep-number">1</span>
+      </div>
+      <div class="video-thumb-sm">
+        <div class="thumb-placeholder-sm">
+          <div class="t-icon">⚙️</div>
+          <div class="t-text">Add thumbnail</div>
+        </div>
+        <div class="play-overlay-sm"><div class="play-btn-sm">▶</div></div>
+      </div>
+      <div class="video-content">
+        <div class="video-ep-tag">Episode 1 · Getting Started</div>
+        <div class="video-title">Indicator Settings & Appearance</div>
+        <div class="video-desc">The first video in the Premium Indicator series — learn about the appearance and settings of the AlphaEdge indicator. The perfect starting point before anything else.</div>
+        <div class="video-tags">
+          <span class="tag tag-green">Beginner</span>
+          <span class="tag tag-gold">Settings</span>
+          <span class="tag tag-gold">Appearance</span>
+        </div>
+      </div>
+      <div class="video-action">
+        <button class="watch-btn">Watch Now</button>
+        <span class="video-duration">--:--</span>
+      </div>
+    </div>
+
+    <!-- VIDEO 2 -->
+    <div class="video-row reveal" onclick="openVideo('https://youtu.be/r_offShMXLs')">
+      <div class="ep-num">
+        <span class="ep-label">Part</span>
+        <span class="ep-number">2</span>
+      </div>
+      <div class="video-thumb-sm">
+        <div class="thumb-placeholder-sm">
+          <div class="t-icon">📐</div>
+          <div class="t-text">Add thumbnail</div>
+        </div>
+        <div class="play-overlay-sm"><div class="play-btn-sm">▶</div></div>
+      </div>
+      <div class="video-content">
+        <div class="video-ep-tag">Episode 2 · Core Concepts</div>
+        <div class="video-title">Types of Support and Resistance</div>
+        <div class="video-desc">The second video in the learning series — understand the different types of Support and Resistance that the indicator identifies and how to read them correctly on the chart.</div>
+        <div class="video-tags">
+          <span class="tag tag-green">Beginner</span>
+          <span class="tag tag-blue">Support</span>
+          <span class="tag tag-red">Resistance</span>
+        </div>
+      </div>
+      <div class="video-action">
+        <button class="watch-btn">Watch Now</button>
+        <span class="video-duration">--:--</span>
+      </div>
+    </div>
+
+    <!-- VIDEO 3 -->
+    <div class="video-row reveal" onclick="openVideo('https://youtu.be/kxxXZr8knxU')">
+      <div class="ep-num">
+        <span class="ep-label">Part</span>
+        <span class="ep-number">3</span>
+      </div>
+      <div class="video-thumb-sm">
+        <div class="thumb-placeholder-sm">
+          <div class="t-icon">📈</div>
+          <div class="t-text">Add thumbnail</div>
+        </div>
+        <div class="play-overlay-sm"><div class="play-btn-sm">▶</div></div>
+      </div>
+      <div class="video-content">
+        <div class="video-ep-tag">Episode 3 · Level Behaviour</div>
+        <div class="video-title">Continuation, Discontinuation & Trailing Stop Loss</div>
+        <div class="video-desc">The third piece of the jigsaw — learn when levels continue and when they discontinue, along with a full explanation of the Trailing Stop Loss feature that helps you lock in maximum profits.</div>
+        <div class="video-tags">
+          <span class="tag tag-gold">Intermediate</span>
+          <span class="tag tag-gold">Trailing SL</span>
+          <span class="tag tag-blue">Continuation</span>
+        </div>
+      </div>
+      <div class="video-action">
+        <button class="watch-btn">Watch Now</button>
+        <span class="video-duration">--:--</span>
+      </div>
+    </div>
+
+    <!-- VIDEO 4 -->
+    <div class="video-row reveal" onclick="openVideo('https://youtu.be/wbQ0gKuHwNo')">
+      <div class="ep-num">
+        <span class="ep-label">Part</span>
+        <span class="ep-number">4</span>
+      </div>
+      <div class="video-thumb-sm">
+        <div class="thumb-placeholder-sm">
+          <div class="t-icon">🗺️</div>
+          <div class="t-text">Add thumbnail</div>
+        </div>
+        <div class="play-overlay-sm"><div class="play-btn-sm">▶</div></div>
+      </div>
+      <div class="video-content">
+        <div class="video-ep-tag">Episode 4 · Zone Marking</div>
+        <div class="video-title">Zone Marking Alongside the Levels</div>
+        <div class="video-desc">The fourth video in the series — learn how to mark zones alongside the indicator levels to create a more complete picture of where price is likely to react and where to look for entries.</div>
+        <div class="video-tags">
+          <span class="tag tag-gold">Intermediate</span>
+          <span class="tag tag-gold">Zones</span>
+          <span class="tag tag-blue">Level Analysis</span>
+        </div>
+      </div>
+      <div class="video-action">
+        <button class="watch-btn">Watch Now</button>
+        <span class="video-duration">--:--</span>
+      </div>
+    </div>
+
+    <!-- VIDEO 5 -->
+    <div class="video-row reveal" onclick="openVideo('https://youtu.be/NgiOhExt6yc')">
+      <div class="ep-num">
+        <span class="ep-label">Part</span>
+        <span class="ep-number">5</span>
+      </div>
+      <div class="video-thumb-sm">
+        <div class="thumb-placeholder-sm">
+          <div class="t-icon">🔄</div>
+          <div class="t-text">Add thumbnail</div>
+        </div>
+        <div class="play-overlay-sm"><div class="play-btn-sm">▶</div></div>
+      </div>
+      <div class="video-content">
+        <div class="video-ep-tag">Episode 5 · Zone Switching</div>
+        <div class="video-title">Zone Switch — Breaking Levels & Marking Above/Below</div>
+        <div class="video-desc">The fifth video — understand what happens when price breaks a level (Zone Switch), and learn how to correctly mark zones above and below the broken levels for the next trade opportunity.</div>
+        <div class="video-tags">
+          <span class="tag tag-gold">Intermediate</span>
+          <span class="tag tag-red">Breakout</span>
+          <span class="tag tag-blue">Zone Switch</span>
+        </div>
+      </div>
+      <div class="video-action">
+        <button class="watch-btn">Watch Now</button>
+        <span class="video-duration">--:--</span>
+      </div>
+    </div>
+
+    <!-- VIDEO 6 -->
+    <div class="video-row reveal" onclick="openVideo('https://youtu.be/XO67_XCa4HM')">
+      <div class="ep-num">
+        <span class="ep-label">Part</span>
+        <span class="ep-number">6</span>
+      </div>
+      <div class="video-thumb-sm">
+        <div class="thumb-placeholder-sm">
+          <div class="t-icon">🎨</div>
+          <div class="t-text">Add thumbnail</div>
+        </div>
+        <div class="play-overlay-sm"><div class="play-btn-sm">▶</div></div>
+      </div>
+      <div class="video-content">
+        <div class="video-ep-tag">Episode 6 · Advanced Concept</div>
+        <div class="video-title">Defeating the Opposite Colour Concept</div>
+        <div class="video-desc">The sixth video — learn the Defeating the Opposite Colour concept, a key filter that helps you see trade setups more clearly and avoid false signals on the chart.</div>
+        <div class="video-tags">
+          <span class="tag tag-red">Advanced</span>
+          <span class="tag tag-gold">Colour Concept</span>
+          <span class="tag tag-blue">Signal Filter</span>
+        </div>
+      </div>
+      <div class="video-action">
+        <button class="watch-btn">Watch Now</button>
+        <span class="video-duration">--:--</span>
+      </div>
+    </div>
+
+    <!-- VIDEO 7 -->
+    <div class="video-row reveal" onclick="openVideo('https://youtu.be/IykfXga-zo8')" style="border-color:rgba(201,168,76,0.4); background:linear-gradient(135deg,#0d1510,var(--surface));">
+      <div class="ep-num" style="background:rgba(201,168,76,0.08);">
+        <span class="ep-label">Part</span>
+        <span class="ep-number" style="color:var(--gold2);">7</span>
+      </div>
+      <div class="video-thumb-sm">
+        <div class="thumb-placeholder-sm">
+          <div class="t-icon">🏆</div>
+          <div class="t-text">Add thumbnail</div>
+        </div>
+        <div class="play-overlay-sm"><div class="play-btn-sm">▶</div></div>
+      </div>
+      <div class="video-content">
+        <div class="video-ep-tag">Episode 7 · ⭐ Most Important</div>
+        <div class="video-title">Trade Setup — When, Which & How to Take Trades</div>
+        <div class="video-desc">The most important video in the entire series — get the complete insight into trade setups, exactly how to take trades, when to enter, and which setups to focus on for the highest probability results.</div>
+        <div class="video-tags">
+          <span class="tag tag-red">Advanced</span>
+          <span class="tag tag-gold">⭐ Must Watch</span>
+          <span class="tag tag-green">Trade Setup</span>
+          <span class="tag tag-blue">Entry Timing</span>
+        </div>
+      </div>
+      <div class="video-action">
+        <button class="watch-btn">Watch Now</button>
+        <span class="video-duration">--:--</span>
+      </div>
+    </div>
+
+    <!-- VIDEO 8 -->
+    <div class="video-row reveal" onclick="openVideo('https://youtu.be/wCbZHjNyWMc')">
+      <div class="ep-num">
+        <span class="ep-label">Part</span>
+        <span class="ep-number">8</span>
+      </div>
+      <div class="video-thumb-sm">
+        <div class="thumb-placeholder-sm">
+          <div class="t-icon">🔭</div>
+          <div class="t-text">Add thumbnail</div>
+        </div>
+        <div class="play-overlay-sm"><div class="play-btn-sm">▶</div></div>
+      </div>
+      <div class="video-content">
+        <div class="video-ep-tag">Episode 8 · Final Chapter</div>
+        <div class="video-title">Stretching Levels & Undefeated Past Levels</div>
+        <div class="video-desc">The final video in the series — learn about stretching levels beyond the current price action and how to identify undefeated past levels that still carry significance for future trades.</div>
+        <div class="video-tags">
+          <span class="tag tag-red">Advanced</span>
+          <span class="tag tag-gold">Stretching Levels</span>
+          <span class="tag tag-blue">Past Levels</span>
+        </div>
+      </div>
+      <div class="video-action">
+        <button class="watch-btn">Watch Now</button>
+        <span class="video-duration">--:--</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- NOTIFY -->
+  <div class="notify-section reveal">
+    <h3>📬 Get notified when new content drops</h3>
+    <p>Enter your email to be the first to know when new tutorial videos, market analysis, and trade walkthroughs are published.</p>
+    <div class="notify-form">
+      <input type="email" class="notify-input" placeholder="your@email.com" id="notifyEmail"/>
+      <button class="notify-btn" onclick="notifyMe()">Notify Me</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">Alpha<span>Edge</span> Analytics</div>
+    <div class="footer-copy">© 2026 AlphaEdge Analytics. For educational purposes only.</div>
+    <ul class="footer-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#pricing">Pricing</a></li>
+      <li><a href="index.html#enrol">Enrol</a></li>
+    </ul>
+  </div>
+</footer>
+
+<!-- WHATSAPP -->
+<a class="wa-btn" href="https://wa.me/917710078486?text=Hi%2C%20I%20have%20a%20question%20about%20AlphaEdge!" target="_blank" rel="noopener" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<script>
+const TELEGRAM_TOKEN = '8998288587:AAF7BVOSBpOVvxE_JxUWioUZjS2hDNdIxfo';
+const ADMIN_CHAT_ID  = '922553974';
+
+function toggleMenu() {
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobileMenu').classList.toggle('open');
+  document.body.style.overflow = document.getElementById('mobileMenu').classList.contains('open') ? 'hidden' : '';
+}
+function closeMenu() {
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('mobileMenu').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function openVideo(url) {
+  if (!url || url.startsWith('YOUR_YOUTUBE')) {
+    alert('Video link coming soon! Please check back shortly.');
+    return;
+  }
+  window.open(url, '_blank');
+}
+
+function notifyMe() {
+  const email = document.getElementById('notifyEmail').value.trim();
+  if (!email || !email.includes('@')) { alert('Please enter a valid email address.'); return; }
+  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      chat_id: ADMIN_CHAT_ID,
+      text: `📬 *Tutorial Notification Signup*\n\n📧 ${email}\n🕐 ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`,
+      parse_mode: 'Markdown'
+    })
+  });
+  document.getElementById('notifyEmail').value = '';
+  alert('You\'re on the list! We\'ll notify you when new content drops. 🎬');
+}
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.06 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
