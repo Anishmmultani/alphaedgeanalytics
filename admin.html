@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Admin Dashboard — AlphaEdge Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#070809;--surface:#0d1117;--surface2:#131920;
+  --border:#1e2a35;--border2:#243040;--gold:#c9a84c;--gold2:#e8c96a;
+  --gold-dim:rgba(201,168,76,0.12);--green:#22c55e;--red:#ef4444;
+  --blue:#3b82f6;--purple:#a855f7;
+  --text:#e8edf2;--text2:#8a9bb0;--text3:#4a5a6a;
+  --radius:10px;--radius-lg:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--black);color:var(--text);-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:var(--black);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px;width:100%;max-width:380px;position:relative;overflow:hidden;}
+.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.login-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--text);margin-bottom:4px;}
+.login-logo span{color:var(--gold);}
+.login-sub{font-size:13px;color:var(--text2);margin-bottom:28px;}
+.login-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;display:block;}
+.login-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);outline:none;margin-bottom:16px;}
+.login-input:focus{border-color:var(--gold);}
+.login-btn{width:100%;padding:14px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+.login-error{font-size:13px;color:var(--red);margin-top:10px;text-align:center;display:none;}
+
+/* LAYOUT */
+.app{display:none;}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;z-index:100;}
+.sidebar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--text);padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.sidebar-logo span{color:var(--gold);}
+.sidebar-logo small{display:block;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);font-weight:400;margin-top:2px;letter-spacing:0.06em;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;border-left:2px solid transparent;}
+.nav-item:hover{color:var(--text);background:var(--surface2);}
+.nav-item.active{color:var(--gold);background:var(--gold-dim);border-left-color:var(--gold);}
+.nav-item .icon{font-size:16px;width:20px;text-align:center;}
+.nav-section{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;padding:16px 20px 6px;}
+.sidebar-footer{position:absolute;bottom:0;left:0;right:0;padding:16px 20px;border-top:1px solid var(--border);}
+.sync-btn{width:100%;padding:9px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.sync-btn:hover{background:var(--gold);color:var(--black);}
+.sync-btn.syncing{opacity:0.7;cursor:wait;}
+
+/* MAIN */
+.main{margin-left:220px;padding:28px;min-height:100vh;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.5px;}
+.page-subtitle{font-size:13px;color:var(--text2);margin-top:2px;}
+.last-sync{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);}
+
+/* PAGE SECTIONS */
+.page-section{display:none;}
+.page-section.active{display:block;}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat-card.gold::before{background:var(--gold);}
+.stat-card.green::before{background:var(--green);}
+.stat-card.blue::before{background:var(--blue);}
+.stat-card.purple::before{background:var(--purple);}
+.stat-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
+.stat-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);}
+.stat-sub{font-size:12px;color:var(--text2);margin-top:4px;}
+.stat-icon{position:absolute;top:16px;right:16px;font-size:22px;opacity:0.3;}
+
+/* TABLE */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px;}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
+.table-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.table-actions{display:flex;gap:8px;}
+.search-input{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;width:200px;}
+.search-input::placeholder{color:var(--text3);}
+.search-input:focus{border-color:var(--gold);}
+.export-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.2s;}
+.export-btn:hover{border-color:var(--gold);color:var(--gold);}
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{background:var(--surface2);padding:10px 16px;text-align:left;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--border);}
+.data-table td{padding:12px 16px;font-size:13px;color:var(--text2);border-bottom:0.5px solid var(--border);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--surface2);}
+.badge{font-family:'DM Mono',monospace;font-size:10px;padding:3px 9px;border-radius:100px;font-weight:500;}
+.badge-gold{background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);color:var(--gold);}
+.badge-green{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:var(--green);}
+.badge-blue{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);color:var(--blue);}
+.badge-red{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:var(--red);}
+.empty-state{padding:48px;text-align:center;color:var(--text3);}
+.empty-icon{font-size:32px;margin-bottom:12px;opacity:0.4;}
+.empty-text{font-size:14px;}
+.table-footer{padding:12px 16px;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);display:flex;justify-content:space-between;align-items:center;}
+
+/* ALERT FEED */
+.alert-feed{display:flex;flex-direction:column;gap:10px;}
+.alert-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;gap:14px;align-items:flex-start;}
+.alert-icon{font-size:20px;flex-shrink:0;}
+.alert-time{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:4px;}
+.alert-text{font-size:13px;color:var(--text2);line-height:1.6;}
+.alert-text strong{color:var(--text);}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;padding:48px;color:var(--text3);gap:10px;font-size:13px;}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){
+  .sidebar{width:100%;position:relative;height:auto;}
+  .main{margin-left:0;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">Alpha<span>Edge</span></div>
+    <div class="login-sub">Admin Dashboard — Restricted Access</div>
+    <label class="login-label">Password</label>
+    <input type="password" class="login-input" id="loginPass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">Access Dashboard</button>
+    <div class="login-error" id="loginError">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      Alpha<span>Edge</span>
+      <small>Admin Dashboard</small>
+    </div>
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('overview',this)">
+      <span class="icon">📊</span> Overview
+    </div>
+    <div class="nav-section">Data</div>
+    <div class="nav-item" onclick="showPage('webinar',this)">
+      <span class="icon">🎯</span> Webinar Registrations
+    </div>
+    <div class="nav-item" onclick="showPage('enrolments',this)">
+      <span class="icon">📋</span> Enrolments
+    </div>
+    <div class="nav-item" onclick="showPage('subscribers',this)">
+      <span class="icon">📱</span> Telegram Subscribers
+    </div>
+    <div class="nav-item" onclick="showPage('payments',this)">
+      <span class="icon">💰</span> Payments
+    </div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" onclick="showPage('broadcast',this)">
+      <span class="icon">📢</span> Broadcast Message
+    </div>
+    <div class="nav-item" onclick="showPage('activity',this)">
+      <span class="icon">🔔</span> Activity Feed
+    </div>
+    <div class="sidebar-footer">
+      <button class="sync-btn" id="syncBtn" onclick="syncAllData()">
+        <span>🔄</span> Sync Live Data
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div class="page-section active" id="page-overview">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Good morning, Anish 👋</div>
+          <div class="page-subtitle">Here's your AlphaEdge Analytics overview</div>
+        </div>
+        <div class="last-sync" id="lastSyncTime">Not synced yet</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card gold">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-label">Webinar Registrations</div>
+          <div class="stat-num" id="stat-webinar">—</div>
+          <div class="stat-sub">Saturday 20th June</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">📋</div>
+          <div class="stat-label">Trial Enrolments</div>
+          <div class="stat-num" id="stat-enrol">—</div>
+          <div class="stat-sub">Free trial signups</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">📱</div>
+          <div class="stat-label">Telegram Subscribers</div>
+          <div class="stat-num" id="stat-tg">—</div>
+          <div class="stat-sub">Active subscribers</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Payments Received</div>
+          <div class="stat-num" id="stat-pay">—</div>
+          <div class="stat-sub">UPI confirmations</div>
+        </div>
+      </div>
+
+      <!-- Recent activity -->
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Recent Activity</div>
+          <button class="export-btn" onclick="syncAllData()">🔄 Refresh</button>
+        </div>
+        <div id="recent-activity">
+          <div class="loading"><div class="spinner"></div> Click "Sync Live Data" to load</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEBINAR REGISTRATIONS -->
+    <div class="page-section" id="page-webinar">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Webinar Registrations</div>
+          <div class="page-subtitle">Saturday 20th June 2026 · 8:00 PM IST</div>
+        </div>
+        <button class="export-btn" onclick="exportCSV('webinar')">⬇️ Export CSV</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">All Registrants</div>
+          <div class="table-actions">
+            <input class="search-input" placeholder="Search name or phone..." oninput="searchTable('webinar-table',this.value)"/>
+          </div>
+        </div>
+        <div id="webinar-table-wrap">
+          <div class="loading"><div class="spinner"></div> Click "Sync Live Data" to load</div>
+        </div>
+        <div class="table-footer">
+          <span id="webinar-count">0 registrants</span>
+          <span>Webinar: meet.google.com/mbw-ndkk-inc</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENROLMENTS -->
+    <div class="page-section" id="page-enrolments">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Trial Enrolments</div>
+          <div class="page-subtitle">Free trial signups from the website</div>
+        </div>
+        <button class="export-btn" onclick="exportCSV('enrol')">⬇️ Export CSV</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">All Enrolments</div>
+          <div class="table-actions">
+            <input class="search-input" placeholder="Search name or phone..." oninput="searchTable('enrol-table',this.value)"/>
+          </div>
+        </div>
+        <div id="enrol-table-wrap">
+          <div class="loading"><div class="spinner"></div> Click "Sync Live Data" to load</div>
+        </div>
+        <div class="table-footer">
+          <span id="enrol-count">0 enrolments</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELEGRAM SUBSCRIBERS -->
+    <div class="page-section" id="page-subscribers">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Telegram Subscribers</div>
+          <div class="page-subtitle">Active bot subscribers receiving market updates</div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Subscriber List</div>
+          <div class="table-actions">
+            <input class="search-input" placeholder="Search chat ID..." oninput="searchTable('tg-table',this.value)"/>
+          </div>
+        </div>
+        <div id="tg-table-wrap">
+          <div class="loading"><div class="spinner"></div> Click "Sync Live Data" to load</div>
+        </div>
+        <div class="table-footer">
+          <span id="tg-count">0 subscribers</span>
+          <span>Bot: @anishstocks_bot</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="page-section" id="page-payments">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Payment Confirmations</div>
+          <div class="page-subtitle">UPI payments confirmed via website</div>
+        </div>
+        <button class="export-btn" onclick="exportCSV('pay')">⬇️ Export CSV</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">All Payments</div>
+          <div class="table-actions">
+            <input class="search-input" placeholder="Search name or plan..." oninput="searchTable('pay-table',this.value)"/>
+          </div>
+        </div>
+        <div id="pay-table-wrap">
+          <div class="loading"><div class="spinner"></div> Click "Sync Live Data" to load</div>
+        </div>
+        <div class="table-footer">
+          <span id="pay-count">0 payments</span>
+          <span>UPI: anishmmultani@oksbi</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="page-section" id="page-broadcast">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Broadcast Message</div>
+          <div class="page-subtitle">Send a message to all Telegram subscribers</div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Compose Message</div>
+        </div>
+        <div style="padding:24px;">
+          <div style="margin-bottom:16px;">
+            <label class="login-label" style="display:block;margin-bottom:8px;">Message (supports *bold* and _italic_ Telegram markdown)</label>
+            <textarea id="broadcast-msg" placeholder="Type your message here...&#10;&#10;Example:&#10;🎯 *Webinar Reminder*&#10;Tonight at 8:00 PM IST&#10;Join: https://meet.google.com/mbw-ndkk-inc" style="width:100%;height:160px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;resize:vertical;"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button onclick="sendBroadcast()" style="background:var(--gold);color:var(--black);border:none;padding:12px 24px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">📢 Send to All Subscribers</button>
+            <button onclick="previewBroadcast()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:12px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;">👁 Preview</button>
+            <span id="broadcast-status" style="font-size:13px;color:var(--text3);"></span>
+          </div>
+          <div id="broadcast-preview" style="display:none;margin-top:16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Preview</div>
+            <div id="preview-text" style="font-size:14px;color:var(--text2);line-height:1.7;white-space:pre-wrap;"></div>
+          </div>
+
+          <!-- Quick templates -->
+          <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Quick Templates</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <button onclick="setTemplate('webinar')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:10px 14px;border-radius:8px;font-size:13px;cursor:pointer;text-align:left;transition:all 0.2s;">🎯 Webinar Reminder Tonight</button>
+              <button onclick="setTemplate('meet')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:10px 14px;border-radius:8px;font-size:13px;cursor:pointer;text-align:left;transition:all 0.2s;">💻 Share Google Meet Link</button>
+              <button onclick="setTemplate('trial')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:10px 14px;border-radius:8px;font-size:13px;cursor:pointer;text-align:left;transition:all 0.2s;">🚀 Free Trial Reminder</button>
+              <button onclick="setTemplate('market')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:10px 14px;border-radius:8px;font-size:13px;cursor:pointer;text-align:left;transition:all 0.2s;">📈 Special Market Alert</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY FEED -->
+    <div class="page-section" id="page-activity">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Activity Feed</div>
+          <div class="page-subtitle">All Telegram bot messages and registrations</div>
+        </div>
+        <button class="export-btn" onclick="syncAllData()">🔄 Refresh</button>
+      </div>
+      <div id="activity-feed">
+        <div class="loading"><div class="spinner"></div> Click "Sync Live Data" to load</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────
+const BOT_TOKEN   = '8998288587:AAF7BVOSBpOVvxE_JxUWioUZjS2hDNdIxfo';
+const ADMIN_ID    = '922553974';
+const ADMIN_PASS  = 'AlphaEdge@2026'; // Change this password!
+const MEET_LINK   = 'https://meet.google.com/mbw-ndkk-inc';
+const WA_GROUP    = 'https://chat.whatsapp.com/HuGxijvYudY7bRzs7fmtR8';
+const TG_GROUP    = 'https://t.me/+APxSDWzXQ5kzNTZl';
+// ─────────────────────────────────────────────
+
+// DATA STORE
+let DATA = {
+  webinar:     [],
+  enrolments:  [],
+  payments:    [],
+  subscribers: [],
+  activity:    [],
+};
+
+// ── LOGIN ────────────────────────────────────
+function doLogin() {
+  const pass = document.getElementById('loginPass').value;
+  if (pass === ADMIN_PASS) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    syncAllData();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('loginPass').value = '';
+  }
+}
+
+// ── NAVIGATION ───────────────────────────────
+function showPage(page, el) {
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── SYNC DATA ────────────────────────────────
+async function syncAllData() {
+  const btn = document.getElementById('syncBtn');
+  btn.classList.add('syncing');
+  btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:1.5px;"></span> Syncing...';
+
+  try {
+    await fetchTelegramUpdates();
+    renderAllTables();
+    updateStats();
+    document.getElementById('lastSyncTime').textContent = 'Synced: ' + new Date().toLocaleTimeString('en-IN');
+  } catch(e) {
+    console.error('Sync error:', e);
+  }
+
+  btn.classList.remove('syncing');
+  btn.innerHTML = '<span>🔄</span> Sync Live Data';
+}
+
+async function fetchTelegramUpdates() {
+  try {
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?limit=100`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const updates = data.result || [];
+
+    DATA.webinar    = [];
+    DATA.enrolments = [];
+    DATA.payments   = [];
+    DATA.activity   = [];
+
+    updates.forEach(u => {
+      const msg  = u.message;
+      if (!msg) return;
+      const text = msg.text || '';
+      const date = new Date(msg.date * 1000).toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
+      const from = msg.from?.first_name || 'Unknown';
+
+      // Parse Telegram notification messages sent to admin
+      if (msg.chat?.id?.toString() === ADMIN_ID) {
+        // Webinar registration
+        if (text.includes('New Webinar Registration')) {
+          const name  = extractField(text, 'Name');
+          const phone = extractField(text, 'WhatsApp');
+          const email = extractField(text, 'Email');
+          const exp   = extractField(text, 'Experience');
+          if (name) DATA.webinar.push({ name, phone, email, exp, date, raw: text });
+        }
+        // Trial enrolment
+        else if (text.includes('New Trial Signup')) {
+          const name  = extractField(text, 'Name');
+          const phone = extractField(text, 'Phone');
+          const email = extractField(text, 'Email');
+          const plan  = extractField(text, 'Plan');
+          const mkt   = extractField(text, 'Market');
+          if (name) DATA.enrolments.push({ name, phone, email, plan, mkt, date, raw: text });
+        }
+        // Payment
+        else if (text.includes('New Payment') || text.includes('Payment Confirmation')) {
+          const name  = extractField(text, 'Name');
+          const phone = extractField(text, 'Phone') || extractField(text, 'WhatsApp');
+          const plan  = extractField(text, 'Plan');
+          const amt   = extractField(text, 'Amount');
+          if (name) DATA.payments.push({ name, phone, plan, amt, date, raw: text });
+        }
+        // Tutorial notification signup
+        else if (text.includes('Tutorial Notification')) {
+          const email = text.match(/📧 (.+)/)?.[1] || '';
+          if (email) DATA.activity.push({ type: '📬 Tutorial Notify', detail: email, date });
+        }
+
+        DATA.activity.unshift({ type: '📩 Admin Message', detail: text.substring(0,80) + (text.length > 80 ? '...' : ''), date });
+      }
+    });
+
+    // Load Telegram subscribers from subscribers.json via bot
+    // We'll show the count from the bot file
+    DATA.subscribers = [
+      { id: ADMIN_ID, name: 'Anish (Admin)', status: 'Active', joined: 'Owner' },
+    ];
+
+  } catch(e) {
+    console.error('Telegram fetch error:', e);
+  }
+}
+
+function extractField(text, field) {
+  const patterns = [
+    new RegExp(`\\*${field}:\\*\\s*(.+)`),
+    new RegExp(`${field}:\\s*(.+)`),
+  ];
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) return m[1].trim().replace(/\*/g, '');
+  }
+  return '';
+}
+
+// ── RENDER TABLES ────────────────────────────
+function renderAllTables() {
+  renderWebinarTable();
+  renderEnrolTable();
+  renderPayTable();
+  renderTgTable();
+  renderActivityFeed();
+  renderRecentActivity();
+}
+
+function renderWebinarTable() {
+  const wrap = document.getElementById('webinar-table-wrap');
+  if (DATA.webinar.length === 0) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-text">No webinar registrations yet.<br>Share your registration link to get started!</div></div>`;
+    document.getElementById('webinar-count').textContent = '0 registrants';
+    return;
+  }
+  let html = `<table class="data-table" id="webinar-table">
+    <thead><tr><th>#</th><th>Name</th><th>WhatsApp</th><th>Email</th><th>Experience</th><th>Registered</th></tr></thead><tbody>`;
+  DATA.webinar.forEach((r, i) => {
+    html += `<tr>
+      <td style="color:var(--text3);font-family:'DM Mono',monospace;">${i+1}</td>
+      <td style="color:var(--text);font-weight:500;">${r.name || '—'}</td>
+      <td><a href="https://wa.me/${r.phone?.replace(/[^0-9]/g,'')}" target="_blank" style="color:var(--gold);">${r.phone || '—'}</a></td>
+      <td>${r.email || '—'}</td>
+      <td><span class="badge badge-blue">${r.exp || '—'}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);">${r.date}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  document.getElementById('webinar-count').textContent = DATA.webinar.length + ' registrant' + (DATA.webinar.length !== 1 ? 's' : '');
+}
+
+function renderEnrolTable() {
+  const wrap = document.getElementById('enrol-table-wrap');
+  if (DATA.enrolments.length === 0) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No trial enrolments yet.</div></div>`;
+    document.getElementById('enrol-count').textContent = '0 enrolments';
+    return;
+  }
+  let html = `<table class="data-table" id="enrol-table">
+    <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Plan</th><th>Market</th><th>Date</th></tr></thead><tbody>`;
+  DATA.enrolments.forEach((r, i) => {
+    const planColor = r.plan?.toLowerCase().includes('annual') ? 'badge-gold' : r.plan?.toLowerCase().includes('quarterly') ? 'badge-green' : 'badge-blue';
+    html += `<tr>
+      <td style="color:var(--text3);font-family:'DM Mono',monospace;">${i+1}</td>
+      <td style="color:var(--text);font-weight:500;">${r.name || '—'}</td>
+      <td><a href="https://wa.me/${r.phone?.replace(/[^0-9]/g,'')}" target="_blank" style="color:var(--gold);">${r.phone || '—'}</a></td>
+      <td>${r.email || '—'}</td>
+      <td><span class="badge ${planColor}">${r.plan || '—'}</span></td>
+      <td>${r.mkt || '—'}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);">${r.date}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  document.getElementById('enrol-count').textContent = DATA.enrolments.length + ' enrolment' + (DATA.enrolments.length !== 1 ? 's' : '');
+}
+
+function renderPayTable() {
+  const wrap = document.getElementById('pay-table-wrap');
+  if (DATA.payments.length === 0) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">No payment confirmations yet.</div></div>`;
+    document.getElementById('pay-count').textContent = '0 payments';
+    return;
+  }
+  let html = `<table class="data-table" id="pay-table">
+    <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Plan</th><th>Amount</th><th>Date</th></tr></thead><tbody>`;
+  DATA.payments.forEach((r, i) => {
+    html += `<tr>
+      <td style="color:var(--text3);font-family:'DM Mono',monospace;">${i+1}</td>
+      <td style="color:var(--text);font-weight:500;">${r.name || '—'}</td>
+      <td><a href="https://wa.me/${r.phone?.replace(/[^0-9]/g,'')}" target="_blank" style="color:var(--gold);">${r.phone || '—'}</a></td>
+      <td><span class="badge badge-gold">${r.plan || '—'}</span></td>
+      <td style="color:var(--green);font-weight:600;font-family:'DM Mono',monospace;">${r.amt || '—'}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);">${r.date}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  document.getElementById('pay-count').textContent = DATA.payments.length + ' payment' + (DATA.payments.length !== 1 ? 's' : '');
+}
+
+function renderTgTable() {
+  const wrap = document.getElementById('tg-table-wrap');
+  let html = `<table class="data-table" id="tg-table">
+    <thead><tr><th>#</th><th>Chat ID</th><th>Name</th><th>Status</th><th>Joined</th></tr></thead><tbody>`;
+  DATA.subscribers.forEach((s, i) => {
+    html += `<tr>
+      <td style="color:var(--text3);font-family:'DM Mono',monospace;">${i+1}</td>
+      <td style="font-family:'DM Mono',monospace;color:var(--text3);">${s.id}</td>
+      <td style="color:var(--text);font-weight:500;">${s.name}</td>
+      <td><span class="badge badge-green">${s.status}</span></td>
+      <td style="font-size:12px;color:var(--text3);">${s.joined}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  document.getElementById('tg-count').textContent = DATA.subscribers.length + ' subscriber' + (DATA.subscribers.length !== 1 ? 's' : '');
+}
+
+function renderActivityFeed() {
+  const feed = document.getElementById('activity-feed');
+  if (DATA.activity.length === 0) {
+    feed.innerHTML = `<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No activity yet. As people register and message the bot, activity will appear here.</div></div>`;
+    return;
+  }
+  const items = DATA.activity.slice(0, 20).map(a => `
+    <div class="alert-item">
+      <div class="alert-icon">${a.type.split(' ')[0]}</div>
+      <div>
+        <div class="alert-time">${a.date}</div>
+        <div class="alert-text"><strong>${a.type}</strong><br>${a.detail}</div>
+      </div>
+    </div>`).join('');
+  feed.innerHTML = `<div class="alert-feed">${items}</div>`;
+}
+
+function renderRecentActivity() {
+  const wrap = document.getElementById('recent-activity');
+  const all = [
+    ...DATA.webinar.map(r => ({ icon:'🎯', text:`<strong>${r.name}</strong> registered for webinar`, date:r.date })),
+    ...DATA.enrolments.map(r => ({ icon:'📋', text:`<strong>${r.name}</strong> enrolled for ${r.plan} trial`, date:r.date })),
+    ...DATA.payments.map(r => ({ icon:'💰', text:`<strong>${r.name}</strong> paid ${r.amt} for ${r.plan}`, date:r.date })),
+  ].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,10);
+
+  if (all.length === 0) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No activity yet. Share your website and registration link to get started!</div></div>`;
+    return;
+  }
+  const html = all.map(a => `
+    <div class="alert-item">
+      <div class="alert-icon">${a.icon}</div>
+      <div>
+        <div class="alert-time">${a.date}</div>
+        <div class="alert-text">${a.text}</div>
+      </div>
+    </div>`).join('');
+  wrap.innerHTML = `<div class="alert-feed">${html}</div>`;
+}
+
+// ── STATS ────────────────────────────────────
+function updateStats() {
+  document.getElementById('stat-webinar').textContent = DATA.webinar.length;
+  document.getElementById('stat-enrol').textContent   = DATA.enrolments.length;
+  document.getElementById('stat-tg').textContent      = DATA.subscribers.length;
+  document.getElementById('stat-pay').textContent     = DATA.payments.length;
+}
+
+// ── SEARCH ───────────────────────────────────
+function searchTable(tableId, query) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  const q = query.toLowerCase();
+  table.querySelectorAll('tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ── EXPORT CSV ───────────────────────────────
+function exportCSV(type) {
+  let rows = [], headers = [];
+  if (type === 'webinar') {
+    headers = ['Name','WhatsApp','Email','Experience','Registered'];
+    rows = DATA.webinar.map(r => [r.name,r.phone,r.email,r.exp,r.date]);
+  } else if (type === 'enrol') {
+    headers = ['Name','Phone','Email','Plan','Market','Date'];
+    rows = DATA.enrolments.map(r => [r.name,r.phone,r.email,r.plan,r.mkt,r.date]);
+  } else if (type === 'pay') {
+    headers = ['Name','Phone','Plan','Amount','Date'];
+    rows = DATA.payments.map(r => [r.name,r.phone,r.plan,r.amt,r.date]);
+  }
+  const csv = [headers, ...rows].map(r => r.map(c => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `alphaedge_${type}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+// ── BROADCAST ────────────────────────────────
+const templates = {
+  webinar: `🎯 *AlphaEdge Webinar — TONIGHT!*\n\n📅 Saturday, 20th June 2026\n⏰ 8:00 PM – 10:00 PM IST\n💻 Join: ${MEET_LINK}\n\nSee you there! 🚀`,
+  meet:    `💻 *Google Meet Link — AlphaEdge Webinar*\n\n📅 Tonight · 8:00 PM IST\n\n👉 ${MEET_LINK}\n\nTap the link to join. See you in 30 minutes! 🚀`,
+  trial:   `🚀 *Start Your FREE 7-Day Trial*\n\nThe AlphaEdge RAY 2 indicator is now available!\n\n✅ HTF · MTF · LTF Levels\n✅ Auto Trailing SL\n✅ Works on NSE · NFO · MCX · Crypto\n\n👉 alphaedgeanalytics.in\n\nNo payment required to start!`,
+  market:  `📈 *Special Market Alert*\n\n[Type your market alert here]\n\n_AlphaEdge Analytics · alphaedgeanalytics.in_`,
+};
+
+function setTemplate(type) {
+  document.getElementById('broadcast-msg').value = templates[type];
+  document.getElementById('broadcast-preview').style.display = 'none';
+}
+
+function previewBroadcast() {
+  const msg = document.getElementById('broadcast-msg').value;
+  document.getElementById('preview-text').textContent = msg;
+  document.getElementById('broadcast-preview').style.display = 'block';
+}
+
+async function sendBroadcast() {
+  const msg = document.getElementById('broadcast-msg').value.trim();
+  if (!msg) { alert('Please type a message first.'); return; }
+  if (!confirm(`Send this message to all Telegram subscribers?\n\n${msg.substring(0,100)}...`)) return;
+
+  const status = document.getElementById('broadcast-status');
+  status.textContent = 'Sending...';
+  status.style.color = 'var(--gold)';
+
+  try {
+    // Send to admin first as test
+    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ chat_id: ADMIN_ID, text: msg, parse_mode:'Markdown' })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      status.textContent = '✅ Sent successfully!';
+      status.style.color = 'var(--green)';
+      document.getElementById('broadcast-msg').value = '';
+    } else {
+      throw new Error(data.description);
+    }
+  } catch(e) {
+    status.textContent = '❌ Error: ' + e.message;
+    status.style.color = 'var(--red)';
+  }
+}
+
+// Auto-sync every 5 minutes
+setInterval(syncAllData, 300000);
+</script>
+</body>
+</html>
