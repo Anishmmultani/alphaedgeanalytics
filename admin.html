@@ -158,6 +158,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--black);color:var(--text);
       <span class="icon">💰</span> Payments
     </div>
     <div class="nav-section">Tools</div>
+    <div class="nav-item" onclick="openManualModal()">
+      <span class="icon">✏️</span> Add Entry Manually
+    </div>
     <div class="nav-item" onclick="showPage('broadcast',this)">
       <span class="icon">📢</span> Broadcast Message
     </div>
@@ -366,7 +369,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--black);color:var(--text);
       </div>
     </div>
 
-    <!-- ACTIVITY FEED -->
+    <!-- MANUAL ENTRY MODAL -->
+<div id="manual-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:5000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;width:100%;max-width:440px;position:relative;">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:20px;">Add Entry Manually</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <select id="manual-type" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;">
+        <option value="webinar">Webinar Registration</option>
+        <option value="enrolment">Trial Enrolment</option>
+        <option value="payment">Payment</option>
+      </select>
+      <input id="manual-name" placeholder="Full Name *" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;"/>
+      <input id="manual-phone" placeholder="WhatsApp Number *" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;"/>
+      <input id="manual-email" placeholder="Email (optional)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;"/>
+      <input id="manual-extra" placeholder="Plan / Experience (optional)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;"/>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button onclick="saveManualEntry()" style="flex:1;padding:12px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Save Entry</button>
+        <button onclick="closeManualModal()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIVITY FEED -->
     <div class="page-section" id="page-activity">
       <div class="page-header">
         <div>
@@ -444,69 +469,89 @@ async function syncAllData() {
 
 async function fetchTelegramUpdates() {
   try {
-    const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?limit=100`;
-    const res  = await fetch(url);
-    const data = await res.json();
-    const updates = data.result || [];
+    // Load saved data from localStorage (populated when registrations happen)
+    const saved = localStorage.getItem('ae_admin_data');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      DATA.webinar     = parsed.webinar     || [];
+      DATA.enrolments  = parsed.enrolments  || [];
+      DATA.payments    = parsed.payments    || [];
+      DATA.activity    = parsed.activity    || [];
+      DATA.subscribers = parsed.subscribers || [];
+    }
 
-    DATA.webinar    = [];
-    DATA.enrolments = [];
-    DATA.payments   = [];
-    DATA.activity   = [];
+    // Try to fetch fresh Telegram data via proxy
+    try {
+      const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?limit=100&offset=-100`;
+      const res  = await fetch(url, { mode: 'cors' });
+      const data = await res.json();
+      const updates = data.result || [];
 
-    updates.forEach(u => {
-      const msg  = u.message;
-      if (!msg) return;
-      const text = msg.text || '';
-      const date = new Date(msg.date * 1000).toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
-      const from = msg.from?.first_name || 'Unknown';
+      // Reset and reparse
+      DATA.webinar    = [];
+      DATA.enrolments = [];
+      DATA.payments   = [];
+      DATA.activity   = [];
 
-      // Parse Telegram notification messages sent to admin
-      if (msg.chat?.id?.toString() === ADMIN_ID) {
-        // Webinar registration
-        if (text.includes('New Webinar Registration')) {
-          const name  = extractField(text, 'Name');
-          const phone = extractField(text, 'WhatsApp');
-          const email = extractField(text, 'Email');
-          const exp   = extractField(text, 'Experience');
-          if (name) DATA.webinar.push({ name, phone, email, exp, date, raw: text });
+      updates.forEach(u => {
+        const msg = u.message;
+        if (!msg) return;
+        const text = (msg.text || '').replace(/[*_]/g, '');
+        const date = new Date(msg.date * 1000).toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
+
+        if (msg.chat?.id?.toString() === ADMIN_ID) {
+          if (text.includes('Webinar Registration') || text.includes('webinar')) {
+            const name  = extractField(text, 'Name');
+            const phone = extractField(text, 'WhatsApp') || extractField(text, 'Phone');
+            const email = extractField(text, 'Email');
+            const exp   = extractField(text, 'Experience');
+            if (name && name.length > 1) DATA.webinar.push({ name, phone, email, exp, date });
+          } else if (text.includes('Trial Signup') || text.includes('Enrolment') || text.includes('enrol')) {
+            const name  = extractField(text, 'Name');
+            const phone = extractField(text, 'Phone') || extractField(text, 'WhatsApp');
+            const email = extractField(text, 'Email');
+            const plan  = extractField(text, 'Plan');
+            const mkt   = extractField(text, 'Market') || extractField(text, 'Experience');
+            if (name && name.length > 1) DATA.enrolments.push({ name, phone, email, plan, mkt, date });
+          } else if (text.includes('Payment') || text.includes('UPI')) {
+            const name  = extractField(text, 'Name');
+            const phone = extractField(text, 'Phone') || extractField(text, 'WhatsApp');
+            const plan  = extractField(text, 'Plan');
+            const amt   = extractField(text, 'Amount');
+            if (name && name.length > 1) DATA.payments.push({ name, phone, plan, amt, date });
+          }
+          DATA.activity.unshift({ type: '📩 Telegram Alert', detail: text.substring(0,100) + (text.length > 100 ? '...' : ''), date });
         }
-        // Trial enrolment
-        else if (text.includes('New Trial Signup')) {
-          const name  = extractField(text, 'Name');
-          const phone = extractField(text, 'Phone');
-          const email = extractField(text, 'Email');
-          const plan  = extractField(text, 'Plan');
-          const mkt   = extractField(text, 'Market');
-          if (name) DATA.enrolments.push({ name, phone, email, plan, mkt, date, raw: text });
-        }
-        // Payment
-        else if (text.includes('New Payment') || text.includes('Payment Confirmation')) {
-          const name  = extractField(text, 'Name');
-          const phone = extractField(text, 'Phone') || extractField(text, 'WhatsApp');
-          const plan  = extractField(text, 'Plan');
-          const amt   = extractField(text, 'Amount');
-          if (name) DATA.payments.push({ name, phone, plan, amt, date, raw: text });
-        }
-        // Tutorial notification signup
-        else if (text.includes('Tutorial Notification')) {
-          const email = text.match(/📧 (.+)/)?.[1] || '';
-          if (email) DATA.activity.push({ type: '📬 Tutorial Notify', detail: email, date });
-        }
+      });
 
-        DATA.activity.unshift({ type: '📩 Admin Message', detail: text.substring(0,80) + (text.length > 80 ? '...' : ''), date });
-      }
-    });
+      // Save to localStorage for offline access
+      localStorage.setItem('ae_admin_data', JSON.stringify({
+        webinar: DATA.webinar, enrolments: DATA.enrolments,
+        payments: DATA.payments, activity: DATA.activity,
+        subscribers: DATA.subscribers, lastSync: new Date().toISOString()
+      }));
 
-    // Load Telegram subscribers from subscribers.json via bot
-    // We'll show the count from the bot file
-    DATA.subscribers = [
-      { id: ADMIN_ID, name: 'Anish (Admin)', status: 'Active', joined: 'Owner' },
-    ];
+      DATA.subscribers = [{ id: ADMIN_ID, name: 'Anish Multani (Admin)', status: 'Active', joined: 'Owner' }];
+
+    } catch(apiErr) {
+      console.log('Live Telegram fetch unavailable — showing cached data');
+      showToast('Showing cached data. Open admin.html locally for live sync.', 'warning');
+    }
 
   } catch(e) {
-    console.error('Telegram fetch error:', e);
+    console.error('Data load error:', e);
   }
+}
+
+function showToast(msg, type) {
+  const existing = document.getElementById('toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.id = 'toast';
+  toast.style.cssText = `position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${type==='warning'?'#1a1500':'#0a1a0a'};border:1px solid ${type==='warning'?'rgba(201,168,76,0.4)':'rgba(34,197,94,0.4)'};color:${type==='warning'?'#c9a84c':'#22c55e'};padding:10px 20px;border-radius:8px;font-size:13px;z-index:99999;max-width:90vw;text-align:center;`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
 }
 
 function extractField(text, field) {
@@ -752,6 +797,53 @@ async function sendBroadcast() {
 
 // Auto-sync every 5 minutes
 setInterval(syncAllData, 300000);
+
+// ── MANUAL ENTRY ─────────────────────────────
+function openManualModal() {
+  document.getElementById('manual-modal').style.display = 'flex';
+}
+function closeManualModal() {
+  document.getElementById('manual-modal').style.display = 'none';
+  ['manual-name','manual-phone','manual-email','manual-extra'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+function saveManualEntry() {
+  const type  = document.getElementById('manual-type').value;
+  const name  = document.getElementById('manual-name').value.trim();
+  const phone = document.getElementById('manual-phone').value.trim();
+  const email = document.getElementById('manual-email').value.trim();
+  const extra = document.getElementById('manual-extra').value.trim();
+  if (!name || !phone) { alert('Name and phone are required.'); return; }
+  const date = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
+  if (type === 'webinar') {
+    DATA.webinar.push({ name, phone, email, exp: extra, date });
+  } else if (type === 'enrolment') {
+    DATA.enrolments.push({ name, phone, email, plan: extra, mkt: '', date });
+  } else if (type === 'payment') {
+    DATA.payments.push({ name, phone, plan: extra, amt: '', date });
+  }
+  // Save to localStorage
+  localStorage.setItem('ae_admin_data', JSON.stringify({
+    webinar: DATA.webinar, enrolments: DATA.enrolments,
+    payments: DATA.payments, activity: DATA.activity,
+    subscribers: DATA.subscribers
+  }));
+  renderAllTables();
+  updateStats();
+  closeManualModal();
+  showToast('Entry saved successfully!', 'success');
+}
+
+// ── CLEAR DATA ───────────────────────────────
+function clearAllData() {
+  if (!confirm('Clear all locally stored data? This cannot be undone.')) return;
+  localStorage.removeItem('ae_admin_data');
+  DATA = { webinar:[], enrolments:[], payments:[], subscribers:[], activity:[] };
+  renderAllTables();
+  updateStats();
+  showToast('All data cleared.', 'warning');
+}
 </script>
 </body>
 </html>
