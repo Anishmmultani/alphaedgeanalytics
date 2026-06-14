@@ -407,6 +407,7 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#testimonials">Reviews</a></li>
     <li><a href="#about">About</a></li>
+    <li><a href="results.html">Results</a></li>
     <li><a href="#webinar">Webinar</a></li>
     <li><a href="tutorials.html">Tutorials</a></li>
     <li><a href="#enrol" class="nav-cta">Enrol Now</a></li>
@@ -423,6 +424,7 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
   <a href="#pricing" onclick="closeMenu()">Pricing</a>
   <a href="#testimonials" onclick="closeMenu()">Reviews</a>
   <a href="#about" onclick="closeMenu()">About</a>
+  <a href="results.html" onclick="closeMenu()">Results</a>
   <a href="#webinar" onclick="closeMenu()">Webinar</a>
   <a href="tutorials.html" onclick="closeMenu()">Tutorials</a>
   <a href="#enrol" onclick="closeMenu()" class="mobile-cta">Start Free Trial →</a>
@@ -822,7 +824,8 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
               <button onclick="registerWebinar()" style="width:100%; padding:15px; background:var(--gold); color:var(--black); border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:700; cursor:pointer; transition:all 0.2s; min-height:52px; margin-top:4px;">
                 Reserve My Seat →
               </button>
-              <div style="font-size:12px; color:var(--text3); text-align:center;">🔒 Free · No payment required · Google Meet link sent on WhatsApp</div>
+              <div style="font-size:12px; color:var(--text3); text-align:center; margin-bottom:8px;">🔒 Free · No payment required · Google Meet link sent on WhatsApp</div>
+              <div style="font-size:12px; color:var(--text3); text-align:center; line-height:1.6;">By registering you agree to our <a href="terms.html" target="_blank" style="color:var(--gold);">Terms & Conditions</a> and <a href="disclaimer.html" target="_blank" style="color:var(--gold);">Risk Disclaimer</a></div>
             </div>
           </div>
 
@@ -901,6 +904,12 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
           <div class="form-group full"><label>Anything you'd like us to know? (Optional)</label><textarea id="notes" placeholder="Your trading style, goals, or questions..."></textarea></div>
           <button class="form-submit" onclick="submitEnrolment()">Start My Free Trial →</button>
           <div class="form-note">🔒 Your data is safe. We never share your information.</div>
+          <div class="form-group full" style="flex-direction:row; align-items:flex-start; gap:10px; margin-top:4px;">
+            <input type="checkbox" id="agree-terms" style="width:18px; height:18px; min-height:18px; margin-top:2px; accent-color:var(--gold); cursor:pointer; flex-shrink:0;"/>
+            <label for="agree-terms" style="font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text2); text-transform:none; letter-spacing:0; cursor:pointer; line-height:1.6;">
+              I have read and agree to the <a href="terms.html" target="_blank" style="color:var(--gold);">Terms & Conditions</a> and <a href="disclaimer.html" target="_blank" style="color:var(--gold);">Risk Disclaimer</a>. I understand that trading involves risk and AlphaEdge Analytics does not guarantee profits.
+            </label>
+          </div>
         </div>
       </div>
       <div class="success-msg" id="success-msg">
@@ -941,6 +950,19 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
 </section>
 
 <!-- FOOTER -->
+<!-- LEGAL STRIP -->
+<div style="background:var(--surface2); border-top:1px solid var(--border); padding:16px 2rem;">
+  <div style="max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div style="font-size:12px; color:var(--text3); line-height:1.6; max-width:600px;">
+      ⚠️ <strong style="color:var(--text2);">Risk Warning:</strong> Trading in financial markets involves substantial risk. AlphaEdge Analytics is not SEBI registered and provides tools for educational purposes only. Past performance is not indicative of future results.
+    </div>
+    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+      <a href="disclaimer.html" style="font-size:12px; color:var(--gold); text-decoration:none;">Risk Disclaimer</a>
+      <a href="terms.html" style="font-size:12px; color:var(--gold); text-decoration:none;">Terms & Conditions</a>
+    </div>
+  </div>
+</div>
+
 <footer>
   <div class="footer-inner">
     <div class="footer-logo">Alpha<span>Edge</span> Analytics</div>
