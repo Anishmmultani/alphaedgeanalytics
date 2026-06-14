@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Privacy Policy — AlphaEdge Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--black:#070809;--surface:#0d1117;--surface2:#131920;--border:#1e2a35;--border2:#243040;--gold:#c9a84c;--gold2:#e8c96a;--gold-dim:rgba(201,168,76,0.12);--green:#22c55e;--red:#ef4444;--text:#e8edf2;--text2:#8a9bb0;--text3:#4a5a6a;--radius:12px;--radius-lg:18px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--black);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:var(--black);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+a{color:var(--gold);}a:hover{color:var(--gold2);}
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(7,8,9,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--text);letter-spacing:-0.5px;text-decoration:none;}
+.nav-logo span{color:var(--gold);}
+.nav-back{font-size:13px;color:var(--text2);transition:color 0.2s;text-decoration:none;}
+.nav-back:hover{color:var(--gold);}
+.page-hero{padding:120px 2rem 60px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;}
+.page-hero-inner{max-width:860px;margin:0 auto;position:relative;z-index:1;}
+.section-tag{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.section-tag::before{content:'';display:block;width:20px;height:1px;background:var(--gold);}
+.page-title{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:16px;}
+.page-title span{color:var(--gold);}
+.page-sub{font-size:15px;color:var(--text2);line-height:1.7;max-width:600px;}
+.last-updated{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:6px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-top:20px;}
+.main{max-width:860px;margin:0 auto;padding:48px 2rem 80px;}
+.legal-section{margin-bottom:40px;}
+.legal-section h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.legal-section h2 .num{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);padding:2px 8px;border-radius:4px;}
+.legal-section p{font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:12px;}
+.legal-section ul{padding-left:0;list-style:none;margin-bottom:12px;}
+.legal-section ul li{font-size:14px;color:var(--text2);line-height:1.8;padding:4px 0;display:flex;align-items:flex-start;gap:10px;}
+.legal-section ul li::before{content:'•';color:var(--gold);font-weight:700;flex-shrink:0;margin-top:1px;}
+.legal-section strong{color:var(--text);}
+.highlight-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin:16px 0;}
+.highlight-box p{font-size:13px;color:var(--text2);line-height:1.75;margin:0;}
+.legal-nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:40px;}
+.legal-nav a{font-family:'DM Mono',monospace;font-size:11px;padding:7px 16px;border-radius:100px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);text-decoration:none;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.06em;}
+.legal-nav a:hover,.legal-nav a.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold);}
+footer{background:var(--surface);border-top:1px solid var(--border);padding:40px 2rem;}
+.footer-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.footer-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;text-decoration:none;color:var(--text);}
+.footer-logo span{color:var(--gold);}
+.footer-copy{font-size:12px;color:var(--text3);}
+.footer-links{display:flex;gap:16px;list-style:none;flex-wrap:wrap;}
+.footer-links a{font-size:12px;color:var(--text3);text-decoration:none;transition:color 0.2s;}
+.footer-links a:hover{color:var(--gold);}
+@media(max-width:600px){nav{padding:0 1.25rem;}.page-hero{padding:100px 1.25rem 48px;}.main{padding:32px 1.25rem 60px;}.footer-inner{flex-direction:column;text-align:center;}.footer-links{justify-content:center;}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">Alpha<span>Edge</span></a>
+  <a href="legal.html" class="nav-back">← Legal Hub</a>
+</nav>
+<div class="page-hero">
+  <div class="hero-grid"></div>
+  <div class="page-hero-inner">
+    <div class="section-tag">Legal</div>
+    <h1 class="page-title">Privacy <span>Policy</span></h1>
+    <p class="page-sub">This policy explains how AlphaEdge Analytics collects, uses, and protects your personal information when you use our services.</p>
+    <div class="last-updated">📅 Last updated: June 2026</div>
+  </div>
+</div>
+<div class="main">
+  <div class="legal-nav">
+    <a href="legal.html">Legal Hub</a>
+    <a href="disclaimer.html">Risk Disclaimer</a>
+    <a href="terms.html">Terms & Conditions</a>
+    <a href="privacy.html" class="active">Privacy Policy</a>
+    <a href="refund.html">Refund Policy</a>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">01</span> Introduction</h2>
+    <p>AlphaEdge Analytics ("we", "us", "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website <strong>alphaedgeanalytics.in</strong>, use our indicator, attend our webinars, or join our Telegram/WhatsApp communities.</p>
+    <p>By using our services, you consent to the data practices described in this policy.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">02</span> Information We Collect</h2>
+    <p>We collect the following types of information:</p>
+    <ul>
+      <li><strong>Personal Information:</strong> Name, email address, WhatsApp/phone number provided during registration or enrolment</li>
+      <li><strong>Payment Information:</strong> UPI transaction references (we do not store card details or bank information)</li>
+      <li><strong>Usage Data:</strong> Pages visited, time spent, browser type, device information collected via Google Analytics</li>
+      <li><strong>Communication Data:</strong> Messages sent to us via WhatsApp or Telegram for support purposes</li>
+      <li><strong>TradingView Data:</strong> Your TradingView username when we grant indicator access</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">03</span> How We Use Your Information</h2>
+    <p>We use the information we collect to:</p>
+    <ul>
+      <li>Provide, maintain, and improve our indicator and services</li>
+      <li>Process subscriptions and grant TradingView indicator access</li>
+      <li>Send market updates, webinar reminders, and service notifications via Telegram and WhatsApp</li>
+      <li>Respond to your queries and provide customer support</li>
+      <li>Analyse website usage to improve user experience (via Google Analytics)</li>
+      <li>Send promotional communications about new features or offers (you can opt out anytime)</li>
+      <li>Comply with legal obligations</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">04</span> Information Sharing</h2>
+    <p>We do <strong>not sell, trade, or rent</strong> your personal information to third parties. We may share your information only in the following limited circumstances:</p>
+    <ul>
+      <li><strong>Service Providers:</strong> Google Analytics for website analytics (anonymised data only)</li>
+      <li><strong>Legal Requirements:</strong> When required by law, court order, or government authority</li>
+      <li><strong>Business Transfer:</strong> In the event of a merger or acquisition, with prior notice to users</li>
+    </ul>
+    <div class="highlight-box">
+      <p>We will never share your phone number, email, or personal details with any third-party marketers or trading services.</p>
+    </div>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">05</span> Data Security</h2>
+    <p>We implement reasonable security measures to protect your personal information including:</p>
+    <ul>
+      <li>SSL encryption on our website (HTTPS)</li>
+      <li>Limited access to personal data — only the founder has access</li>
+      <li>Secure storage of subscriber records</li>
+      <li>No storage of payment details or bank information</li>
+    </ul>
+    <p>However, no method of transmission over the internet is 100% secure. While we strive to protect your data, we cannot guarantee absolute security.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">06</span> Cookies & Analytics</h2>
+    <p>Our website uses Google Analytics to understand how visitors interact with our site. Google Analytics uses cookies to collect anonymised data about website usage. This data helps us improve our content and user experience.</p>
+    <p>You can opt out of Google Analytics by installing the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank">Google Analytics Opt-out Browser Add-on</a>.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">07</span> Telegram & WhatsApp</h2>
+    <p>When you join our Telegram or WhatsApp groups, your phone number and profile name are visible to group administrators. We use these platforms to deliver market updates and educational content. We do not share your contact details from these groups with any third parties.</p>
+    <p>These platforms have their own privacy policies — please review <a href="https://telegram.org/privacy" target="_blank">Telegram's Privacy Policy</a> and <a href="https://www.whatsapp.com/legal/privacy-policy" target="_blank">WhatsApp's Privacy Policy</a>.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">08</span> Your Rights</h2>
+    <p>You have the following rights regarding your personal data:</p>
+    <ul>
+      <li><strong>Access:</strong> Request a copy of the personal data we hold about you</li>
+      <li><strong>Correction:</strong> Request correction of inaccurate personal data</li>
+      <li><strong>Deletion:</strong> Request deletion of your personal data (subject to legal obligations)</li>
+      <li><strong>Opt-out:</strong> Unsubscribe from marketing communications at any time</li>
+      <li><strong>Portability:</strong> Request your data in a portable format</li>
+    </ul>
+    <p>To exercise any of these rights, contact us on WhatsApp at +91 77100 78486.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">09</span> Children's Privacy</h2>
+    <p>Our services are not directed to individuals under the age of 18. We do not knowingly collect personal information from minors. If you believe a minor has provided us with personal information, please contact us immediately and we will delete such information.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">10</span> Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. We will notify subscribers of significant changes via WhatsApp or Telegram. The "Last updated" date at the top of this page indicates when the policy was last revised. Continued use of our services after changes constitutes acceptance of the updated policy.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">11</span> Contact Us</h2>
+    <p>For any privacy-related questions or requests:</p>
+    <ul>
+      <li><strong>WhatsApp:</strong> +91 77100 78486</li>
+      <li><strong>Website:</strong> alphaedgeanalytics.in</li>
+      <li><strong>Location:</strong> Mumbai, Maharashtra, India</li>
+    </ul>
+  </div>
+</div>
+<footer>
+  <div class="footer-inner">
+    <a href="index.html" class="footer-logo">Alpha<span>Edge</span> Analytics</a>
+    <div class="footer-copy">© 2026 AlphaEdge Analytics. Mumbai, Maharashtra, India.</div>
+    <ul class="footer-links">
+      <li><a href="legal.html">Legal Hub</a></li>
+      <li><a href="disclaimer.html">Disclaimer</a></li>
+      <li><a href="terms.html">Terms</a></li>
+      <li><a href="refund.html">Refund Policy</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>
