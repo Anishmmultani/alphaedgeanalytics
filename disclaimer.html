@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Risk Disclaimer — AlphaEdge Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:#070809; --surface:#0d1117; --surface2:#131920;
+  --border:#1e2a35; --border2:#243040; --gold:#c9a84c; --gold2:#e8c96a;
+  --gold-dim:rgba(201,168,76,0.12); --green:#22c55e; --red:#ef4444;
+  --text:#e8edf2; --text2:#8a9bb0; --text3:#4a5a6a;
+  --radius:12px; --radius-lg:18px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--black);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--black);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+a{text-decoration:none;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(7,8,9,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--text);letter-spacing:-0.5px;}
+.nav-logo span{color:var(--gold);}
+.nav-back{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);transition:color 0.2s;}
+.nav-back:hover{color:var(--gold);}
+
+.page-hero{padding:120px 2rem 60px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;}
+.page-hero-inner{max-width:860px;margin:0 auto;position:relative;z-index:1;}
+.section-tag{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.section-tag::before{content:'';display:block;width:20px;height:1px;background:var(--gold);}
+.page-title{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:16px;}
+.page-title span{color:var(--gold);}
+.page-sub{font-size:15px;color:var(--text2);line-height:1.7;max-width:600px;}
+.last-updated{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:6px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-top:20px;}
+
+.main{max-width:860px;margin:0 auto;padding:48px 2rem 80px;}
+
+.warning-box{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius);padding:20px 24px;margin-bottom:40px;display:flex;gap:14px;align-items:flex-start;}
+.warning-icon{font-size:24px;flex-shrink:0;}
+.warning-text{font-size:14px;color:var(--text2);line-height:1.7;}
+.warning-text strong{color:var(--red);}
+
+.legal-section{margin-bottom:40px;}
+.legal-section h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.legal-section h2 .num{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);padding:2px 8px;border-radius:4px;}
+.legal-section p{font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:12px;}
+.legal-section ul{padding-left:0;list-style:none;margin-bottom:12px;}
+.legal-section ul li{font-size:14px;color:var(--text2);line-height:1.8;padding:4px 0;display:flex;align-items:flex-start;gap:10px;}
+.legal-section ul li::before{content:'•';color:var(--gold);font-weight:700;flex-shrink:0;margin-top:1px;}
+.legal-section strong{color:var(--text);}
+
+.highlight-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin:16px 0;}
+.highlight-box p{font-size:13px;color:var(--text2);line-height:1.75;margin:0;}
+
+footer{background:var(--surface);border-top:1px solid var(--border);padding:40px 2rem;}
+.footer-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.footer-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;}
+.footer-logo span{color:var(--gold);}
+.footer-copy{font-size:12px;color:var(--text3);}
+.footer-links{display:flex;gap:16px;list-style:none;flex-wrap:wrap;}
+.footer-links a{font-size:12px;color:var(--text3);text-decoration:none;transition:color 0.2s;}
+.footer-links a:hover{color:var(--gold);}
+
+@media(max-width:600px){
+  nav{padding:0 1.25rem;}
+  .page-hero{padding:100px 1.25rem 48px;}
+  .main{padding:32px 1.25rem 60px;}
+  .footer-inner{flex-direction:column;text-align:center;}
+  .footer-links{justify-content:center;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Alpha<span>Edge</span></a>
+  <a href="index.html" class="nav-back">← Back to Home</a>
+</nav>
+
+<div class="page-hero">
+  <div class="hero-grid"></div>
+  <div class="page-hero-inner">
+    <div class="section-tag">Legal</div>
+    <h1 class="page-title">Risk <span>Disclaimer</span></h1>
+    <p class="page-sub">Please read this disclaimer carefully before using AlphaEdge Analytics services, indicator, or any content on this website.</p>
+    <div class="last-updated">📅 Last updated: June 2026</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Warning box -->
+  <div class="warning-box">
+    <div class="warning-icon">⚠️</div>
+    <div class="warning-text">
+      <strong>IMPORTANT RISK WARNING:</strong> Trading in financial markets involves substantial risk of loss and is not suitable for every investor. The value of investments may fall as well as rise. You should never trade with money you cannot afford to lose. Past performance is not indicative of future results.
+    </div>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">01</span> General Disclaimer</h2>
+    <p>AlphaEdge Analytics (hereinafter referred to as "we", "us", or "our") operates the website <strong>alphaedgeanalytics.in</strong> and provides the RAY 2 - AlphaEdge TradingView indicator, market analysis tools, educational content, webinars, and related services.</p>
+    <p>All information, content, tools, indicators, and services provided by AlphaEdge Analytics are strictly for <strong>educational and informational purposes only</strong> and do not constitute financial advice, investment advice, trading advice, or any other form of advice.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">02</span> No SEBI Registration</h2>
+    <p>AlphaEdge Analytics is <strong>not registered with the Securities and Exchange Board of India (SEBI)</strong> as an Investment Adviser, Research Analyst, or Portfolio Manager.</p>
+    <p>We do not provide:</p>
+    <ul>
+      <li>Specific buy or sell recommendations on securities</li>
+      <li>Investment advice or portfolio management services</li>
+      <li>Tips, calls, or trading signals as defined under SEBI regulations</li>
+      <li>Any service that constitutes regulated financial advisory activity</li>
+    </ul>
+    <div class="highlight-box">
+      <p>Our indicator and educational content are tools designed to help traders make their own informed decisions. The responsibility for all trading decisions rests solely with the individual trader.</p>
+    </div>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">03</span> Trading Risk Warning</h2>
+    <p>Trading in equities, futures & options (F&O), commodities (MCX), forex, gold, and cryptocurrency involves significant financial risk including but not limited to:</p>
+    <ul>
+      <li>Loss of entire invested capital</li>
+      <li>Losses exceeding initial investment in leveraged products</li>
+      <li>Market volatility and gap risks</li>
+      <li>Liquidity risks in certain market conditions</li>
+      <li>Technical and system failures</li>
+      <li>Regulatory and tax risks</li>
+    </ul>
+    <p>You should carefully consider whether trading is appropriate for you in light of your financial situation, experience, and risk tolerance.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">04</span> Indicator & Tool Disclaimer</h2>
+    <p>The RAY 2 - AlphaEdge indicator is a <strong>technical analysis tool</strong> that displays price levels based on multi-timeframe analysis (HTF, MTF, LTF). It is designed as an educational and analytical aid only.</p>
+    <ul>
+      <li>The indicator does not guarantee profitable trades</li>
+      <li>Past performance of the indicator does not guarantee future results</li>
+      <li>All trading setups shown are for educational purposes only</li>
+      <li>Users should exercise their own judgment before executing any trade</li>
+      <li>We are not responsible for any financial losses incurred while using our indicator</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">05</span> Educational Content Disclaimer</h2>
+    <p>All webinars, tutorial videos, market briefings, Telegram updates, and other content provided by AlphaEdge Analytics are <strong>purely educational in nature</strong>. They are intended to teach trading concepts and the use of our indicator — not to provide financial advice.</p>
+    <p>Market analysis, level identification, and trade examples shared during webinars or in our Telegram group are for <strong>demonstration and learning purposes only</strong> and should not be treated as trading recommendations.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">06</span> No Profit Guarantee</h2>
+    <p>AlphaEdge Analytics makes <strong>no representation or guarantee</strong> of any specific outcome or profit from the use of our indicator, educational content, or services. Any results, testimonials, or trade examples shown on our website or social media are individual experiences and are not typical or guaranteed.</p>
+    <div class="highlight-box">
+      <p>Individual results will vary based on market conditions, trader skill, risk management, capital, and other factors outside our control. You are solely responsible for your trading decisions and outcomes.</p>
+    </div>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">07</span> Third-Party Information</h2>
+    <p>Our website and Telegram bot may display market data, news, and information sourced from third-party providers including Yahoo Finance and other public data sources. We do not guarantee the accuracy, completeness, or timeliness of such information and shall not be held liable for any errors or omissions in third-party data.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">08</span> Limitation of Liability</h2>
+    <p>To the fullest extent permitted by applicable law, AlphaEdge Analytics, its founder Anish Multani, and its associates shall not be liable for any direct, indirect, incidental, special, consequential, or punitive damages arising from:</p>
+    <ul>
+      <li>Use or inability to use our indicator, website, or services</li>
+      <li>Trading losses incurred based on our content or tools</li>
+      <li>Errors, interruptions, or delays in our services</li>
+      <li>Reliance on any information provided by us</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">09</span> Governing Law</h2>
+    <p>This disclaimer is governed by and construed in accordance with the laws of India. Any disputes arising in connection with this disclaimer shall be subject to the exclusive jurisdiction of the courts located in <strong>Mumbai, Maharashtra, India</strong>.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2><span class="num">10</span> Contact Us</h2>
+    <p>If you have any questions about this disclaimer, please contact us:</p>
+    <ul>
+      <li><strong>Website:</strong> alphaedgeanalytics.in</li>
+      <li><strong>WhatsApp:</strong> +91 77100 78486</li>
+      <li><strong>Location:</strong> Mumbai, Maharashtra, India</li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">Alpha<span>Edge</span> Analytics</div>
+    <div class="footer-copy">© 2026 AlphaEdge Analytics. Mumbai, Maharashtra, India.</div>
+    <ul class="footer-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="terms.html">Terms & Conditions</a></li>
+      <li><a href="disclaimer.html">Disclaimer</a></li>
+    </ul>
+  </div>
+</footer>
+
+</body>
+</html>
