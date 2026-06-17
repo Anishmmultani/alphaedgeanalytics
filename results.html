@@ -312,9 +312,11 @@ function filterResults(market, btn) {
   document.getElementById('result-count').textContent = 'Showing ' + count + ' results';
 }
 
-function openModal(btn) {
-  const img = btn.closest('.result-card').querySelector('img');
-  document.getElementById('modal-img').src = img.src;
+function openModal(src, title) {
+  document.getElementById('modal-img').src = src;
+  if (document.getElementById('modal-title')) {
+    document.getElementById('modal-title').textContent = title || '';
+  }
   document.getElementById('imgModal').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
