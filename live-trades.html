@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Live Trades & Learning Videos — AlphaEdge Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#070809;--surface:#0d1117;--surface2:#131920;
+  --border:#1e2a35;--border2:#243040;
+  --gold:#c9a84c;--gold2:#e8c96a;--gold-dim:rgba(201,168,76,0.12);
+  --green:#22c55e;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;
+  --text:#e8edf2;--text2:#8a9bb0;--text3:#4a5a6a;
+  --radius:10px;--radius-lg:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--black);color:var(--text);-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(7,8,9,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 5%;}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--text);text-decoration:none;}
+.nav-logo span{color:var(--gold);}
+.nav-links{display:flex;align-items:center;gap:28px;list-style:none;}
+.nav-links a{font-size:14px;color:var(--text2);text-decoration:none;transition:color 0.2s;}
+.nav-links a:hover,.nav-links a.active{color:var(--gold);}
+.nav-cta{background:var(--gold)!important;color:var(--black)!important;padding:8px 20px;border-radius:8px;font-weight:600;}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--text2);border-radius:2px;}
+.mobile-menu{display:none;position:fixed;inset:64px 0 0;background:var(--black);z-index:99;padding:24px 5%;flex-direction:column;gap:16px;}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{font-size:16px;color:var(--text2);text-decoration:none;padding:12px 0;border-bottom:1px solid var(--border);}
+
+/* PAGE */
+.page-wrap{padding-top:64px;}
+
+/* HERO */
+.page-hero{padding:48px 5% 32px;background:linear-gradient(180deg,var(--surface) 0%,var(--black) 100%);border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.page-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(201,168,76,0.06) 0%,transparent 70%);pointer-events:none;}
+.hero-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:12px;}
+.hero-title{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,42px);font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:12px;}
+.hero-title span{color:var(--gold);}
+.hero-sub{font-size:15px;color:var(--text2);line-height:1.7;max-width:560px;margin-bottom:24px;}
+.hero-stats{display:flex;gap:24px;flex-wrap:wrap;}
+.hstat{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);}
+.hstat span{color:var(--gold);font-size:16px;font-weight:700;display:block;margin-bottom:2px;}
+
+/* FILTER BAR */
+.filter-bar{padding:20px 5%;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:64px;z-index:50;}
+.filter-inner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.filter-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-right:4px;}
+.fbtn{font-size:12px;padding:6px 16px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.fbtn:hover{border-color:var(--gold);color:var(--gold);}
+.fbtn.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold);}
+
+/* GRID */
+.content-section{padding:32px 5%;}
+.section-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px;}
+.section-sub{font-size:13px;color:var(--text2);margin-bottom:20px;}
+.divider{height:1px;background:var(--border);margin:32px 0;}
+
+.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px;}
+
+/* VIDEO CARD */
+.vcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:all 0.2s;position:relative;}
+.vcard:hover{border-color:var(--gold);transform:translateY(-2px);}
+.vcard.featured{border-color:rgba(201,168,76,0.4);}
+.vcard.featured::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold);}
+
+.vcard-thumb{position:relative;aspect-ratio:16/9;overflow:hidden;background:var(--surface2);}
+.vcard-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.vcard-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);opacity:0;transition:opacity 0.2s;}
+.vcard:hover .vcard-play{opacity:1;}
+.play-circle{width:52px;height:52px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.vcard-badge{position:absolute;top:10px;left:10px;font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:100px;font-weight:500;}
+.badge-live{background:rgba(239,68,68,0.9);color:#fff;}
+.badge-analysis{background:rgba(59,130,246,0.9);color:#fff;}
+.badge-setup{background:rgba(34,197,94,0.9);color:#fff;}
+.badge-education{background:rgba(168,85,247,0.9);color:#fff;}
+.badge-special{background:rgba(201,168,76,0.9);color:#000;}
+.vcard-dur{position:absolute;bottom:8px;right:8px;font-family:'DM Mono',monospace;font-size:10px;background:rgba(0,0,0,0.8);color:var(--text2);padding:2px 6px;border-radius:4px;}
+
+.vcard-body{padding:14px;}
+.vcard-instrument{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+.vcard-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;line-height:1.3;}
+.vcard-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px;}
+.vcard-tags{display:flex;gap:4px;flex-wrap:wrap;}
+.vtag{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);}
+.vtag.gold{background:var(--gold-dim);border-color:rgba(201,168,76,0.3);color:var(--gold);}
+
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:999;align-items:center;justify-content:center;padding:20px;}
+.modal.open{display:flex;}
+.modal-inner{width:100%;max-width:860px;position:relative;}
+.modal-close{position:absolute;top:-40px;right:0;background:none;border:none;color:var(--text2);font-size:24px;cursor:pointer;padding:4px;}
+.video-embed{position:relative;aspect-ratio:16/9;border-radius:var(--radius-lg);overflow:hidden;background:#000;}
+.video-embed iframe{width:100%;height:100%;border:none;}
+
+/* UPLOAD CTA */
+.upload-cta{background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius-lg);padding:32px;text-align:center;margin-top:24px;}
+.upload-cta-icon{font-size:32px;margin-bottom:12px;opacity:0.5;}
+.upload-cta-title{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--text2);}
+.upload-cta-sub{font-size:13px;color:var(--text3);}
+
+/* COMING SOON */
+.coming-soon{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.cs-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);opacity:0.5;flex-shrink:0;}
+.cs-text{font-size:13px;color:var(--text3);}
+
+@media(max-width:768px){
+  .nav-links{display:none;}
+  .hamburger{display:flex;}
+  .video-grid{grid-template-columns:1fr;}
+  .hero-stats{gap:16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Alpha<span>Edge</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="tutorials.html">Tutorials</a></li>
+      <li><a href="results.html">Results</a></li>
+      <li><a href="live-trades.html" class="active">Live Trades</a></li>
+      <li><a href="index.html#enrol" class="nav-cta">Enrol Now</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Home</a>
+  <a href="tutorials.html">Tutorials</a>
+  <a href="results.html">Results</a>
+  <a href="live-trades.html">Live Trades</a>
+  <a href="index.html#enrol">Enrol Now</a>
+</div>
+
+<div class="page-wrap">
+
+  <!-- HERO -->
+  <div class="page-hero">
+    <div class="hero-label">AlphaEdge Analytics · Live Learning</div>
+    <h1 class="hero-title">Live Trades &<br><span>Learning Videos</span></h1>
+    <p class="hero-sub">Watch real trades being taken using the RAY 2 AlphaEdge indicator. Live chart analysis, trade setups, entries, SL management and exits — all explained as they happen.</p>
+    <div class="hero-stats">
+      <div class="hstat"><span>NSE</span>Nifty 50</div>
+      <div class="hstat"><span>NFO</span>BankNifty</div>
+      <div class="hstat"><span>MCX</span>Gold · Crude</div>
+      <div class="hstat"><span>Live</span>Real Trades</div>
+    </div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="filter-bar">
+    <div class="filter-inner">
+      <span class="filter-label">Filter</span>
+      <button class="fbtn active" onclick="filterVideos('all',this)">All</button>
+      <button class="fbtn" onclick="filterVideos('live',this)">Live Trades</button>
+      <button class="fbtn" onclick="filterVideos('analysis',this)">Chart Analysis</button>
+      <button class="fbtn" onclick="filterVideos('setup',this)">Trade Setups</button>
+      <button class="fbtn" onclick="filterVideos('education',this)">Education</button>
+      <button class="fbtn" onclick="filterVideos('special',this)">Special Observations</button>
+    </div>
+  </div>
+
+  <div class="content-section">
+
+    <!-- SPECIAL OBSERVATION -->
+    <div class="section-title">Special Observations</div>
+    <div class="section-sub">Key market observations and chart patterns worth learning from</div>
+    <div class="video-grid" id="videoGrid">
+
+      <div class="vcard featured" data-cat="special" onclick="openVideo('EtwKyuTlbXw')">
+        <div class="vcard-thumb">
+          <img src="https://img.youtube.com/vi/EtwKyuTlbXw/mqdefault.jpg" alt="Stretching of Levels" loading="lazy"/>
+          <div class="vcard-play"><div class="play-circle">▶</div></div>
+          <span class="vcard-badge badge-special">Special</span>
+        </div>
+        <div class="vcard-body">
+          <div class="vcard-instrument">Nifty 50 · 1-min · Jun 18, 2026</div>
+          <div class="vcard-title">Stretching of Levels Part 2 — Live Example</div>
+          <div class="vcard-desc">See how price stretches beyond zone boundaries in real market conditions. Live walkthrough on Nifty 50 showing the exact stretching concept with entry implications.</div>
+          <div class="vcard-tags">
+            <span class="vtag gold">Stretching Levels</span>
+            <span class="vtag">Live Example</span>
+            <span class="vtag">Nifty 50</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLACEHOLDER FOR MORE SPECIAL OBSERVATIONS -->
+      <div class="vcard" data-cat="special" style="opacity:0.5;cursor:default;">
+        <div class="vcard-thumb" style="background:var(--surface2);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;">
+          <div style="text-align:center;color:var(--text3);">
+            <div style="font-size:28px;margin-bottom:8px;">🎬</div>
+            <div style="font-size:12px;">Coming Soon</div>
+          </div>
+        </div>
+        <div class="vcard-body">
+          <div class="vcard-instrument">Special Observation</div>
+          <div class="vcard-title">Gap Up Bearish Rejection Setup</div>
+          <div class="vcard-desc">When gap-up candles are repeatedly rejected at PRZ Bearish zones with lower highs — bears are in control. Learn to avoid longs in this structure.</div>
+          <div class="vcard-tags">
+            <span class="vtag">Gap Up</span>
+            <span class="vtag">PRZ Bearish</span>
+            <span class="vtag">Lower Highs</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- LIVE TRADES SECTION -->
+    <div class="section-title">Live Trades</div>
+    <div class="section-sub">Real trades taken using the AlphaEdge system — entry, SL and target explained live</div>
+
+    <div class="coming-soon">
+      <div class="cs-dot"></div>
+      <div class="cs-text">BankNifty Options Live Trade — HTF Support + MTF Confluence entry · Coming soon</div>
+    </div>
+    <div class="coming-soon">
+      <div class="cs-dot"></div>
+      <div class="cs-text">Nifty 50 Intraday Live Trade — PRZ Bullish trigger with Auto Trailing SL · Coming soon</div>
+    </div>
+    <div class="coming-soon">
+      <div class="cs-dot"></div>
+      <div class="cs-text">MCX Gold Swing Trade — HTF OB Zone entry with 1:4 R:R · Coming soon</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- CHART ANALYSIS -->
+    <div class="section-title">Chart Analysis</div>
+    <div class="section-sub">Pre-market and post-market analysis of Nifty, BankNifty and MCX</div>
+
+    <div class="coming-soon">
+      <div class="cs-dot"></div>
+      <div class="cs-text">Nifty 50 Pre-Market Analysis — AlphaEdge zone mapping · Coming soon</div>
+    </div>
+    <div class="coming-soon">
+      <div class="cs-dot"></div>
+      <div class="cs-text">BankNifty Weekly Zone Analysis — Key HTF levels to watch · Coming soon</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- TRADE SETUPS -->
+    <div class="section-title">Trade Setups</div>
+    <div class="section-sub">Step-by-step setup walkthroughs using the 3-step AlphaEdge entry system</div>
+
+    <div class="coming-soon">
+      <div class="cs-dot"></div>
+      <div class="cs-text">Setup A — HTF Support + MTF Resistance Mitigated + LTF Breakout · Coming soon</div>
+    </div>
+    <div class="coming-soon">
+      <div class="cs-dot"></div>
+      <div class="cs-text">Setup B — MTF Support Mitigated + PRZ Bearish + Resistance Break · Coming soon</div>
+    </div>
+    <div class="coming-soon">
+      <div class="cs-dot"></div>
+      <div class="cs-text">3TF Confluence Setup — All three timeframes aligning · Coming soon</div>
+    </div>
+
+    <!-- UPLOAD CTA -->
+    <div class="upload-cta">
+      <div class="upload-cta-icon">📹</div>
+      <div class="upload-cta-title">More videos being added regularly</div>
+      <div class="upload-cta-sub">Subscribe to our YouTube channel and join the Telegram group to get notified when new live trade videos are uploaded.</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+        <a href="https://t.me/+APxSDWzXQ5kzNTZl" target="_blank" style="background:var(--gold);color:var(--black);padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">Join Telegram Group</a>
+        <a href="https://chat.whatsapp.com/HuGxijvYudY7bRzs7fmtR8" target="_blank" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:10px 24px;border-radius:8px;font-size:13px;text-decoration:none;">Join WhatsApp Group</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- VIDEO MODAL -->
+<div class="modal" id="videoModal" onclick="closeModal(event)">
+  <div class="modal-inner">
+    <button class="modal-close" onclick="closeVideoModal()">✕</button>
+    <div class="video-embed">
+      <iframe id="videoFrame" src="" allowfullscreen allow="autoplay"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+
+function openVideo(id) {
+  document.getElementById('videoFrame').src = `https://www.youtube.com/embed/${id}?autoplay=1`;
+  document.getElementById('videoModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeVideoModal() {
+  document.getElementById('videoFrame').src = '';
+  document.getElementById('videoModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('videoModal')) closeVideoModal();
+}
+
+function filterVideos(cat, btn) {
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.vcard').forEach(card => {
+    if (cat === 'all' || card.dataset.cat === cat) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// Scroll reveal
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.vcard').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
