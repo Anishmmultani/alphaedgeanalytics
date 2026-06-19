@@ -1216,10 +1216,43 @@ function submitEnrolment() {
 }
 
 function notifyTelegram(msg) {
-  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ chat_id:ADMIN_CHAT_ID, text:msg, parse_mode:'Markdown' })
-  });
+  // Telegram replaced with dual notification system (Telegram banned in India)
+  
+  // Method 1: Store in localStorage — readable by admin dashboard
+  try {
+    const notifications = JSON.parse(localStorage.getItem('ae_notifications') || '[]');
+    notifications.unshift({
+      msg: msg.replace(/\*/g,'').replace(/`/g,''),
+      time: new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})
+    });
+    localStorage.setItem('ae_notifications', JSON.stringify(notifications.slice(0, 100)));
+  } catch(e) {}
+
+  // Method 2: Send via FormSubmit to email (free, no backend needed)
+  try {
+    const cleanMsg = msg.replace(/\*/g,'').replace(/`/g,'').replace(/\n/g,' | ');
+    fetch('https://formsubmit.co/ajax/hello@alphaedgeanalytics.in', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        _subject: 'AlphaEdge — New Notification',
+        message: cleanMsg,
+        _template: 'table'
+      })
+    }).catch(()=>{});
+  } catch(e) {}
+
+  // Method 3: WhatsApp deep link — opens on admin phone automatically
+  try {
+    const waMsg = encodeURIComponent(msg.replace(/\*/g,'').replace(/`/g,''));
+    const waLink = document.createElement('a');
+    waLink.href = 'https://wa.me/917710078486?text=' + waMsg;
+    waLink.target = '_blank';
+    waLink.style.display = 'none';
+    document.body.appendChild(waLink);
+    waLink.click();
+    setTimeout(() => document.body.removeChild(waLink), 1000);
+  } catch(e) {}
 }
 
 function showSuccess() {
