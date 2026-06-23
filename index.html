@@ -1116,11 +1116,14 @@ const UPI_NAME       = 'AlphaEdge Analytics';
 let selectedPlan = 'monthly';
 let qrInstance   = null;
 
-const planDetails = {
-  monthly:   { name:'Monthly Plan',   price:'₹999',   amount:'999'  },
-  quarterly: { name:'Quarterly Plan', price:'₹2,499', amount:'2499' },
-  annual:    { name:'Annual Plan',    price:'₹7,999', amount:'7999' },
-};
+const planDetails = (function() {
+  var on = (typeof OFFER_ACTIVE !== "undefined") ? OFFER_ACTIVE : false;
+  return {
+    monthly:   { name:'Monthly Plan',   price: on ? '₹2,499'  : '₹3,499',  amount: on ? '2499'  : '3499'  },
+    quarterly: { name:'Quarterly Plan', price: on ? '₹6,000'  : '₹7,499',  amount: on ? '6000'  : '7499'  },
+    annual:    { name:'Annual Plan',    price: on ? '₹12,000' : '₹18,000', amount: on ? '12000' : '18000' },
+  };
+})();
 
 function trackEvent(a,c,l) { if(typeof gtag!=='undefined') gtag('event',a,{event_category:c,event_label:l}); }
 
@@ -1487,34 +1490,46 @@ function loadOfferConfig() {
 }
 
 function updatePricing(config) {
-  const offerActive = config && config.offer_active && new Date(config.offer_end) > new Date();
+  var offerActive = config && config.offer_active && new Date(config.offer_end) > new Date();
 
-  document.querySelectorAll('.offer-original').forEach(el => {
+  // Show/hide offer elements
+  document.querySelectorAll('.offer-original').forEach(function(el) {
     el.style.display = offerActive ? 'block' : 'none';
   });
-  document.querySelectorAll('.offer-badge').forEach(el => {
+  document.querySelectorAll('.offer-badge').forEach(function(el) {
     el.style.display = offerActive ? 'inline-block' : 'none';
   });
-  document.querySelectorAll('.offer-coupon-hint').forEach(el => {
+  document.querySelectorAll('.offer-coupon-hint').forEach(function(el) {
     el.style.display = offerActive ? 'block' : 'none';
   });
 
-  if (document.getElementById('price-monthly')) {
+  // Update spot booking banner
+  var banner = document.getElementById('spot-booking-banner');
+  if (banner) banner.style.display = offerActive ? 'flex' : 'none';
+
+  // Update prices
+  var pm = document.getElementById('price-monthly');
+  var pq = document.getElementById('price-quarterly');
+  var pa = document.getElementById('price-annual');
+  var peq = document.getElementById('period-quarterly');
+  var pea = document.getElementById('period-annual');
+
+  if (pm && pq && pa) {
     if (offerActive) {
-      document.getElementById('price-monthly').innerHTML   = '<sup>₹</sup>2,499';
-      document.getElementById('price-quarterly').innerHTML = '<sup>₹</sup>6,000';
-      document.getElementById('price-annual').innerHTML    = '<sup>₹</sup>12,000';
-      document.getElementById('period-quarterly').textContent = 'per 3 months · ₹2,000/mo';
-      document.getElementById('period-annual').textContent    = 'per year · ₹1,500/mo';
+      pm.innerHTML  = '<sup>₹</sup>2,499';
+      pq.innerHTML  = '<sup>₹</sup>6,000';
+      pa.innerHTML  = '<sup>₹</sup>12,000';
+      if (peq) peq.textContent = 'per 3 months · ₹2,000/mo';
+      if (pea) pea.textContent = 'per year · ₹1,000/mo';
     } else {
-      document.getElementById('price-monthly').innerHTML   = '<sup>₹</sup>3,499';
-      document.getElementById('price-quarterly').innerHTML = '<sup>₹</sup>7,499';
-      document.getElementById('price-annual').innerHTML    = '<sup>₹</sup>12,000';
-      document.getElementById('period-quarterly').textContent = 'per 3 months';
-      document.getElementById('period-annual').textContent    = 'per year';
+      pm.innerHTML  = '<sup>₹</sup>3,499';
+      pq.innerHTML  = '<sup>₹</sup>7,499';
+      pa.innerHTML  = '<sup>₹</sup>18,000';
+      if (peq) peq.textContent = 'per 3 months';
+      if (pea) pea.textContent = 'per year · ₹1,500/mo';
     }
   }
-  // Re-check config every minute
+  // Re-check every minute
   setTimeout(function(){ updatePricing(loadOfferConfig()); }, 60000);
 }
 
