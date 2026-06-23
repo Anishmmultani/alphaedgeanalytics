@@ -395,6 +395,7 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
   .plan-price { font-size:32px; }
 }
 </style>
+  <script src="offer.js"></script>
 </head>
 <body>
 
@@ -1472,13 +1473,12 @@ loadOfferConfig().then(function(config) {
 // Upload to GitHub after changing
 // ═══════════════════════════════════════════════
 async function loadOfferConfig() {
-  // ↓↓↓ EDIT THIS OBJECT TO CONTROL THE OFFER ↓↓↓
-  const CONFIG = {
-    offer_active : true,
-    offer_end    : "2026-06-30T23:59:00"
+  // Reads from offer.js — edit that file to control the offer
+  return {
+    offer_active : (typeof OFFER_ACTIVE !== "undefined") ? OFFER_ACTIVE : false,
+    offer_end    : (typeof OFFER_END    !== "undefined") ? OFFER_END    : "2026-06-30T23:59:00",
+    offer_coupon : (typeof OFFER_COUPON !== "undefined") ? OFFER_COUPON : "ALPHA2026"
   };
-  // ↑↑↑ EDIT ABOVE ONLY ↑↑↑
-  return CONFIG;
 }
 
 function updatePricing(config) {
