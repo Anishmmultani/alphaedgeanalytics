@@ -1260,9 +1260,23 @@ function closeMenu() {
 // Payment modal
 function openPayment(plan) {
   selectedPlan = plan;
+  // Update modal prices based on offer status
+  var cfg = loadOfferConfig();
+  var on = cfg.offer_active && new Date(cfg.offer_end) > new Date();
+  var mp = document.querySelector('.modal-price-monthly');
+  var qp = document.querySelector('.modal-price-quarterly');
+  var ap = document.querySelector('.modal-price-annual');
+  var ms = document.querySelector('.modal-save-monthly');
+  var qs = document.querySelector('.modal-save-quarterly');
+  var as = document.querySelector('.modal-save-annual');
+  if (mp) mp.textContent = on ? '₹2,499'  : '₹3,499';
+  if (qp) qp.textContent = on ? '₹6,000'  : '₹7,499';
+  if (ap) ap.textContent = on ? '₹12,000' : '₹18,000';
+  if (ms) ms.textContent = on ? 'Save ₹1,000' : 'Free 7-day trial';
+  if (qs) qs.textContent = on ? 'Save ₹1,499' : 'Save 20%';
+  if (as) as.textContent = on ? 'Save ₹6,000' : 'Save 33%';
   document.getElementById('payModal').classList.add('active');
   document.body.style.overflow = 'hidden';
-  // Reset to selected plan
   selectUpiPlan(plan);
   trackEvent('open_payment_modal','Pricing',plan);
 }
