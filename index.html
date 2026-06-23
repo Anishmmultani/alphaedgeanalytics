@@ -1545,6 +1545,10 @@ console.log('AlphaEdge offer loaded:', _oc);
 var _oc = loadOfferConfig();
 updateCountdown(_oc);
 updatePricing(_oc);
+// Run again after 500ms to ensure all elements are rendered
+setTimeout(function(){ updatePricing(_oc); }, 500);
+// Run again after 1500ms as final fallback
+setTimeout(function(){ updatePricing(loadOfferConfig()); }, 1500);
 console.log('AlphaEdge offer loaded:', _oc);
 </script>
 </body>
