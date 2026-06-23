@@ -1466,13 +1466,7 @@ function updateCountdown() {
   tick();
   const timer = setInterval(tick, 1000);
 }
-// Load config from offer.js — runs after DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-  var _config = loadOfferConfig();
-  updateCountdown(_config);
-  updatePricing(_config);
-  console.log('AlphaEdge offer loaded:', _config);
-});
+// offer init moved to bottom
 
 // ═══════════════════════════════════════════════
 // OFFER CONTROL — Edit ONE line below to activate
@@ -1539,6 +1533,19 @@ function validateCoupon(plan) {
   }
   return p.regular;
 }
+</script>
+<script>
+// Offer init — runs after full page load
+var _oc = loadOfferConfig();
+updateCountdown(_oc);
+updatePricing(_oc);
+console.log('AlphaEdge offer loaded:', _oc);
+</script>
+<script>
+var _oc = loadOfferConfig();
+updateCountdown(_oc);
+updatePricing(_oc);
+console.log('AlphaEdge offer loaded:', _oc);
 </script>
 </body>
 </html>
