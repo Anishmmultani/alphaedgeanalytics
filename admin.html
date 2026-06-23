@@ -534,8 +534,8 @@ async function fetchTelegramUpdates() {
       DATA.subscribers = [{ id: ADMIN_ID, name: 'Anish Multani (Admin)', status: 'Active', joined: 'Owner' }];
 
     } catch(apiErr) {
-      console.log('Live Telegram fetch unavailable — showing cached data');
-      showToast('Showing cached data. Open admin.html locally for live sync.', 'warning');
+      console.log('Telegram unavailable — India ban active. Using email + localStorage notifications.');
+      showToast('Telegram banned in India. Form submissions arriving via Email & localStorage.', 'info');
     }
 
   } catch(e) {
@@ -845,5 +845,95 @@ function clearAllData() {
   showToast('All data cleared.', 'warning');
 }
 </script>
+
+  <!-- ── OFFER / COUNTDOWN CONTROL ── -->
+  <div style="background:#0d1117;border:1px solid #1e2a35;border-radius:16px;padding:24px;margin:24px;">
+    <div style="font-family:'DM Mono',monospace;font-size:11px;color:#c9a84c;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;">🎯 Spot Booking Offer Control</div>
+    
+    <!-- Current status -->
+    <div id="offer-status" style="background:#131920;border-radius:10px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:13px;color:#8a9bb0;" id="offer-status-text">Loading offer status...</div>
+    </div>
+
+    <!-- Set duration -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;color:#e8edf2;margin-bottom:10px;font-weight:500;">Set Offer Duration:</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="setOffer(1)"  style="padding:8px 16px;border-radius:8px;border:1px solid #1e2a35;background:#131920;color:#e8edf2;cursor:pointer;font-size:13px;">1 Hour</button>
+        <button onclick="setOffer(6)"  style="padding:8px 16px;border-radius:8px;border:1px solid #1e2a35;background:#131920;color:#e8edf2;cursor:pointer;font-size:13px;">6 Hours</button>
+        <button onclick="setOffer(12)" style="padding:8px 16px;border-radius:8px;border:1px solid #1e2a35;background:#131920;color:#e8edf2;cursor:pointer;font-size:13px;">12 Hours</button>
+        <button onclick="setOffer(24)" style="padding:8px 16px;border-radius:8px;border:1px solid #1e2a35;background:#c9a84c;color:#070809;cursor:pointer;font-size:13px;font-weight:600;">24 Hours</button>
+        <button onclick="setOffer(48)" style="padding:8px 16px;border-radius:8px;border:1px solid #1e2a35;background:#131920;color:#e8edf2;cursor:pointer;font-size:13px;">48 Hours</button>
+        <button onclick="setOffer(72)" style="padding:8px 16px;border-radius:8px;border:1px solid #1e2a35;background:#131920;color:#e8edf2;cursor:pointer;font-size:13px;">72 Hours</button>
+      </div>
+    </div>
+
+    <!-- Custom date/time -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;color:#e8edf2;margin-bottom:8px;font-weight:500;">Or set custom end date & time:</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="datetime-local" id="custom-end" style="padding:8px 12px;border-radius:8px;border:1px solid #1e2a35;background:#131920;color:#e8edf2;font-size:13px;"/>
+        <button onclick="setOfferCustom()" style="padding:8px 20px;border-radius:8px;background:#c9a84c;color:#070809;border:none;font-size:13px;font-weight:600;cursor:pointer;">Set Custom</button>
+      </div>
+    </div>
+
+    <!-- Stop offer -->
+    <button onclick="stopOffer()" style="padding:10px 24px;border-radius:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:13px;cursor:pointer;font-weight:500;">
+      ⏹ Stop Offer Now
+    </button>
+  </div>
+
+  <script>
+  function updateOfferStatus() {
+    const stored = localStorage.getItem('ae_offer_end');
+    const el = document.getElementById('offer-status-text');
+    if (!stored) {
+      el.innerHTML = '⚪ <strong style="color:#8a9bb0;">No active offer</strong> — Banner is hidden on website';
+      return;
+    }
+    const endTime = parseInt(stored);
+    const now = new Date().getTime();
+    if (now > endTime) {
+      el.innerHTML = '🔴 <strong style="color:#ef4444;">Offer expired</strong> — Banner is hidden';
+      localStorage.removeItem('ae_offer_end');
+      return;
+    }
+    const diff = endTime - now;
+    const h = Math.floor(diff / (1000*60*60));
+    const m = Math.floor((diff % (1000*60*60)) / (1000*60));
+    const s = Math.floor((diff % (1000*60)) / 1000);
+    const endDate = new Date(endTime).toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
+    el.innerHTML = `🟢 <strong style="color:#22c55e;">Offer ACTIVE</strong> — Expires: ${endDate} &nbsp;|&nbsp; Remaining: <strong style="color:#c9a84c;">${h}h ${m}m ${s}s</strong>`;
+  }
+
+  function setOffer(hours) {
+    const endTime = new Date().getTime() + (hours * 60 * 60 * 1000);
+    localStorage.setItem('ae_offer_end', endTime);
+    updateOfferStatus();
+    alert('✅ Offer activated for ' + hours + ' hours! Banner is now visible on website.');
+  }
+
+  function setOfferCustom() {
+    const val = document.getElementById('custom-end').value;
+    if (!val) { alert('Please select a date and time'); return; }
+    const endTime = new Date(val).getTime();
+    if (endTime <= new Date().getTime()) { alert('Please select a future date and time'); return; }
+    localStorage.setItem('ae_offer_end', endTime);
+    updateOfferStatus();
+    alert('✅ Offer activated! Banner is now visible on website.');
+  }
+
+  function stopOffer() {
+    if (confirm('Stop the offer now? Banner will be hidden on website.')) {
+      localStorage.removeItem('ae_offer_end');
+      updateOfferStatus();
+      alert('⏹ Offer stopped. Banner is now hidden.');
+    }
+  }
+
+  updateOfferStatus();
+  setInterval(updateOfferStatus, 1000);
+  </script>
+
 </body>
 </html>
