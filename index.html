@@ -1460,11 +1460,10 @@ function updateCountdown() {
   tick();
   const timer = setInterval(tick, 1000);
 }
-// Load config from JSONBin then run everything
-loadOfferConfig().then(function(config) {
-  updateCountdown(config);
-  updatePricing(config);
-});
+// Load config from offer.js synchronously
+var _config = loadOfferConfig();
+updateCountdown(_config);
+updatePricing(_config);
 
 // ═══════════════════════════════════════════════
 // OFFER CONTROL — Edit ONE line below to activate
@@ -1472,7 +1471,7 @@ loadOfferConfig().then(function(config) {
 // Change offer_end to set expiry date
 // Upload to GitHub after changing
 // ═══════════════════════════════════════════════
-async function loadOfferConfig() {
+function loadOfferConfig() {
   // Reads from offer.js — edit that file to control the offer
   return {
     offer_active : (typeof OFFER_ACTIVE !== "undefined") ? OFFER_ACTIVE : false,
@@ -1509,8 +1508,8 @@ function updatePricing(config) {
       document.getElementById('period-annual').textContent    = 'per year';
     }
   }
-  // Re-fetch config every 5 minutes
-  setTimeout(() => loadOfferConfig().then(c => updatePricing(c)), 300000);
+  // Re-check config every minute
+  setTimeout(function(){ updatePricing(loadOfferConfig()); }, 60000);
 }
 
 // Coupon validation in payment modal
