@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="offer.js"></script>
+  <script>
+    // Fallback if offer.js fails to load
+    if (typeof OFFER_ACTIVE === "undefined") { var OFFER_ACTIVE = false; }
+    if (typeof OFFER_END    === "undefined") { var OFFER_END    = "2026-06-30T23:59:00"; }
+    if (typeof OFFER_COUPON === "undefined") { var OFFER_COUPON = "ALPHA2026"; }
+  </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#070809">
@@ -395,7 +402,6 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
   .plan-price { font-size:32px; }
 }
 </style>
-  <script src="offer.js"></script>
 </head>
 <body>
 
@@ -1460,10 +1466,13 @@ function updateCountdown() {
   tick();
   const timer = setInterval(tick, 1000);
 }
-// Load config from offer.js synchronously
-var _config = loadOfferConfig();
-updateCountdown(_config);
-updatePricing(_config);
+// Load config from offer.js — runs after DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  var _config = loadOfferConfig();
+  updateCountdown(_config);
+  updatePricing(_config);
+  console.log('AlphaEdge offer loaded:', _config);
+});
 
 // ═══════════════════════════════════════════════
 // OFFER CONTROL — Edit ONE line below to activate
@@ -1472,12 +1481,15 @@ updatePricing(_config);
 // Upload to GitHub after changing
 // ═══════════════════════════════════════════════
 function loadOfferConfig() {
-  // Reads from offer.js — edit that file to control the offer
-  return {
-    offer_active : (typeof OFFER_ACTIVE !== "undefined") ? OFFER_ACTIVE : false,
-    offer_end    : (typeof OFFER_END    !== "undefined") ? OFFER_END    : "2026-06-30T23:59:00",
-    offer_coupon : (typeof OFFER_COUPON !== "undefined") ? OFFER_COUPON : "ALPHA2026"
-  };
+  try {
+    return {
+      offer_active : (typeof OFFER_ACTIVE !== "undefined") ? OFFER_ACTIVE : false,
+      offer_end    : (typeof OFFER_END    !== "undefined") ? OFFER_END    : "2026-06-30T23:59:00",
+      offer_coupon : (typeof OFFER_COUPON !== "undefined") ? OFFER_COUPON : "ALPHA2026"
+    };
+  } catch(e) {
+    return { offer_active: false, offer_end: "2026-06-30T23:59:00" };
+  }
 }
 
 function updatePricing(config) {
