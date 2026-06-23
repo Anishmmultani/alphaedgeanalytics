@@ -1130,7 +1130,8 @@ let selectedPlan = 'monthly';
 let qrInstance   = null;
 
 const planDetails = (function() {
-  var on = (typeof OFFER_ACTIVE !== "undefined") ? OFFER_ACTIVE : false;
+  var cfg = loadOfferConfig();
+  var on = cfg.offer_active && new Date(cfg.offer_end) > new Date();
   return {
     monthly:   { name:'Monthly Plan',   price: on ? '₹2,499'  : '₹3,499',  amount: on ? '2499'  : '3499'  },
     quarterly: { name:'Quarterly Plan', price: on ? '₹6,000'  : '₹7,499',  amount: on ? '6000'  : '7499'  },
