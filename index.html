@@ -411,6 +411,10 @@ body.offer-active .offer-original      { display: block !important; }
 body.offer-active .offer-badge         { display: inline-block !important; }
 body.offer-active .offer-coupon-hint   { display: block !important; }
 body.offer-active #spot-booking-banner { display: flex !important; }
+/* Modal plan selector prices */
+body.offer-active .modal-price-monthly  { }
+body.offer-active .modal-price-quarterly { }
+body.offer-active .modal-price-annual   { }
 </style>
 </head>
 <body>
@@ -963,9 +967,9 @@ body.offer-active #spot-booking-banner { display: flex !important; }
           </div>
           <div class="form-group full"><label>Choose Your Plan</label>
             <div class="plan-select-grid">
-              <div><input type="radio" name="plan" id="p-monthly" class="plan-radio" value="monthly"><label for="p-monthly" class="plan-select-label"><div class="plan-select-name">Monthly</div><div class="plan-select-price">₹999</div><div class="plan-select-save">7 days free</div></label></div>
-              <div><input type="radio" name="plan" id="p-quarterly" class="plan-radio" value="quarterly" checked><label for="p-quarterly" class="plan-select-label"><div class="plan-select-name">Quarterly ⭐</div><div class="plan-select-price">₹2,499</div><div class="plan-select-save">Save 17%</div></label></div>
-              <div><input type="radio" name="plan" id="p-annual" class="plan-radio" value="annual"><label for="p-annual" class="plan-select-label"><div class="plan-select-name">Annual</div><div class="plan-select-price">₹7,999</div><div class="plan-select-save">Save 33%</div></label></div>
+              <div><input type="radio" name="plan" id="p-monthly" class="plan-radio" value="monthly"><label for="p-monthly" class="plan-select-label"><div class="plan-select-name">Monthly</div><div class="plan-select-price modal-price-monthly">₹3,499</div><div class="plan-select-save modal-save-monthly">Free 7-day trial</div></label></div>
+              <div><input type="radio" name="plan" id="p-quarterly" class="plan-radio" value="quarterly" checked><label for="p-quarterly" class="plan-select-label"><div class="plan-select-name">Quarterly ⭐</div><div class="plan-select-price modal-price-quarterly">₹7,499</div><div class="plan-select-save modal-save-quarterly">Save 20%</div></label></div>
+              <div><input type="radio" name="plan" id="p-annual" class="plan-radio" value="annual"><label for="p-annual" class="plan-select-label"><div class="plan-select-name">Annual</div><div class="plan-select-price modal-price-annual">₹18,000</div><div class="plan-select-save modal-save-annual">Save 33%</div></label></div>
             </div>
           </div>
           <div class="form-group full"><label>Anything you'd like us to know? (Optional)</label><textarea id="notes" placeholder="Your trading style, goals, or questions..."></textarea></div>
@@ -1578,8 +1582,22 @@ console.log('AlphaEdge offer loaded:', _oc);
 <script>
 var _oc = loadOfferConfig();
 // Use CSS class on body — most reliable approach
-if (_oc.offer_active && new Date(_oc.offer_end) > new Date()) {
+var offerOn = _oc.offer_active && new Date(_oc.offer_end) > new Date();
+if (offerOn) {
   document.body.classList.add('offer-active');
+  // Update modal plan selector prices
+  var mp = document.querySelector('.modal-price-monthly');
+  var qp = document.querySelector('.modal-price-quarterly');
+  var ap = document.querySelector('.modal-price-annual');
+  var ms = document.querySelector('.modal-save-monthly');
+  var qs = document.querySelector('.modal-save-quarterly');
+  var as = document.querySelector('.modal-save-annual');
+  if (mp) mp.textContent = '₹2,499';
+  if (qp) qp.textContent = '₹6,000';
+  if (ap) ap.textContent = '₹12,000';
+  if (ms) ms.textContent = 'Save ₹1,000';
+  if (qs) qs.textContent = 'Save ₹1,499';
+  if (as) as.textContent = 'Save ₹6,000';
   console.log('Offer ON — discounted prices showing');
 } else {
   document.body.classList.remove('offer-active');
