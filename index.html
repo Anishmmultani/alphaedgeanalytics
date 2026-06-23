@@ -402,19 +402,14 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
   .plan-price { font-size:32px; }
 }
 
-/* Offer pricing control */
-body.offer-active .price-regular { display: none !important; }
-body.offer-active .price-offer   { display: block !important; }
-body:not(.offer-active) .price-regular { display: block !important; }
-body:not(.offer-active) .price-offer   { display: none !important; }
-body.offer-active .offer-original      { display: block !important; }
-body.offer-active .offer-badge         { display: inline-block !important; }
-body.offer-active .offer-coupon-hint   { display: block !important; }
+/* Offer pricing control — scoped to pricing section only */
+body.offer-active .pricing-grid .price-regular { display: none !important; }
+body.offer-active .pricing-grid .price-offer   { display: block !important; }
+body:not(.offer-active) .pricing-grid .price-offer { display: none !important; }
+body.offer-active .pricing-grid .offer-original      { display: block !important; }
+body.offer-active .pricing-grid .offer-badge         { display: inline-block !important; }
+body.offer-active .pricing-grid .offer-coupon-hint   { display: block !important; }
 body.offer-active #spot-booking-banner { display: flex !important; }
-/* Modal plan selector prices */
-body.offer-active .modal-price-monthly  { }
-body.offer-active .modal-price-quarterly { }
-body.offer-active .modal-price-annual   { }
 </style>
 </head>
 <body>
@@ -1133,7 +1128,19 @@ const UPI_NAME       = 'AlphaEdge Analytics';
 let selectedPlan = 'monthly';
 let qrInstance   = null;
 
-const planDetails = (function() {
+function loadOfferConfig() {
+  try {
+    return {
+      offer_active : (typeof OFFER_ACTIVE !== "undefined") ? OFFER_ACTIVE : false,
+      offer_end    : (typeof OFFER_END    !== "undefined") ? OFFER_END    : "2026-06-30T23:59:00",
+      offer_coupon : (typeof OFFER_COUPON !== "undefined") ? OFFER_COUPON : "ALPHA2026"
+    };
+  } catch(e) {
+    return { offer_active: false, offer_end: "2026-06-30T23:59:00" };
+  }
+}
+
+planDetails = (function() {
   var cfg = loadOfferConfig();
   var on = cfg.offer_active && new Date(cfg.offer_end) > new Date();
   return {
@@ -1500,17 +1507,7 @@ function updateCountdown() {
 // Change offer_end to set expiry date
 // Upload to GitHub after changing
 // ═══════════════════════════════════════════════
-function loadOfferConfig() {
-  try {
-    return {
-      offer_active : (typeof OFFER_ACTIVE !== "undefined") ? OFFER_ACTIVE : false,
-      offer_end    : (typeof OFFER_END    !== "undefined") ? OFFER_END    : "2026-06-30T23:59:00",
-      offer_coupon : (typeof OFFER_COUPON !== "undefined") ? OFFER_COUPON : "ALPHA2026"
-    };
-  } catch(e) {
-    return { offer_active: false, offer_end: "2026-06-30T23:59:00" };
-  }
-}
+
 
 function updatePricing(config) {
   var offerActive = config && config.offer_active && new Date(config.offer_end) > new Date();
