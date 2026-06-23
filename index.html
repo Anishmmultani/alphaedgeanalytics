@@ -1420,22 +1420,19 @@ function updateCountdown() {
   const el = document.getElementById('countdown');
 
   // If admin hasn't set an end time — hide banner completely
-  if (!stored) {
+  if (!OFFER_ACTIVE) {
     if (banner) banner.style.display = 'none';
     return;
   }
 
-  const endTime = parseInt(stored);
+  const endTime = new Date(config.offer_end).getTime();
   const now = new Date().getTime();
 
-  // If offer has expired — hide banner
   if (now > endTime) {
     if (banner) banner.style.display = 'none';
-    localStorage.removeItem('ae_offer_end');
     return;
   }
 
-  // Show banner and start countdown
   if (banner) banner.style.display = 'flex';
 
   function tick() {
@@ -1444,7 +1441,6 @@ function updateCountdown() {
 
     if (diff <= 0) {
       if (banner) banner.style.display = 'none';
-      localStorage.removeItem('ae_offer_end');
       clearInterval(timer);
       return;
     }
@@ -1466,10 +1462,28 @@ function updateCountdown() {
 updateCountdown();
 updatePricing();
 
-function updatePricing() {
-  const stored = localStorage.getItem('ae_offer_end');
-  const now = new Date().getTime();
-  const offerActive = stored && parseInt(stored) > now;
+// ═══════════════════════════════════════════════
+// OFFER CONTROL — Managed via JSONBin.io
+// Update offer status at jsonbin.io — no GitHub upload needed
+// Bin ID: 6a3acc26da38895dfef327da
+// ═══════════════════════════════════════════════
+
+// Fetch offer config from JSONBin
+async function loadOfferConfig() {
+  try {
+    const res = await fetch('https://api.jsonbin.io/v3/b/6a3acc26da38895dfef327da/latest', {
+      headers: { 'X-Access-Key': '$2a$10$C6OpHfTrE8LOCoj.dzhgn.UgL1kNzPJ.qgzJ310w8vX12BrXB0Ka2' }
+    });
+    const data = await res.json();
+    return data.record;
+  } catch(e) {
+    // Fallback to defaults if fetch fails
+    return { offer_active: false, offer_end: "2026-06-30T23:59:00" };
+  }
+}
+
+function updatePricing(config) {
+  const offerActive = config && config.offer_active && new Date(config.offer_end) > new Date();
 
   document.querySelectorAll('.offer-original').forEach(el => {
     el.style.display = offerActive ? 'block' : 'none';
@@ -1496,7 +1510,8 @@ function updatePricing() {
       document.getElementById('period-annual').textContent    = 'per year';
     }
   }
-  setTimeout(updatePricing, 30000);
+  // Re-fetch config every 5 minutes
+  setTimeout(() => loadOfferConfig().then(c => updatePricing(c)), 300000);
 }
 
 // Coupon validation in payment modal
