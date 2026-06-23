@@ -1325,7 +1325,12 @@ const observer = new IntersectionObserver((entries) => {
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
 // Init QR on page load
-window.addEventListener('load', function() { generateQR('monthly'); updateDeepLinks('monthly'); });
+window.addEventListener('load', function() {
+  // Update pricing after full page load including images
+  var _cfg = loadOfferConfig();
+  updatePricing(_cfg);
+  updateCountdown(_cfg);
+  generateQR('monthly'); updateDeepLinks('monthly'); });
 
 
 // ── LIVE TICKER ──────────────────────────────
