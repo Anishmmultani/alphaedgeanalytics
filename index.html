@@ -401,6 +401,16 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
   .mobile-menu { top:58px; }
   .plan-price { font-size:32px; }
 }
+
+/* Offer pricing control */
+body.offer-active .price-regular { display: none !important; }
+body.offer-active .price-offer   { display: block !important; }
+body:not(.offer-active) .price-regular { display: block !important; }
+body:not(.offer-active) .price-offer   { display: none !important; }
+body.offer-active .offer-original      { display: block !important; }
+body.offer-active .offer-badge         { display: inline-block !important; }
+body.offer-active .offer-coupon-hint   { display: block !important; }
+body.offer-active #spot-booking-banner { display: flex !important; }
 </style>
 </head>
 <body>
@@ -582,7 +592,8 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
         <div class="plan-name">Monthly</div>
         <div style="display:flex;align-items:baseline;gap:10px;justify-content:center;margin:8px 0;">
           <div class="offer-original" style="font-size:20px;color:#4a5a6a;text-decoration:line-through;font-weight:500;display:none;">₹3,499</div>
-          <div class="plan-price" id="price-monthly"><sup>₹</sup>3,499</div>
+          <div class="plan-price price-regular" id="price-monthly"><sup>₹</sup>3,499</div>
+          <div class="plan-price price-offer" style="display:none;"><sup>₹</sup>2,499</div>
         </div>
         <div class="plan-period" id="period-monthly">per month</div>
         <div class="plan-save offer-badge" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:4px 12px;display:none;margin:6px 0;">
@@ -609,7 +620,8 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
         <div class="plan-name">Quarterly</div>
         <div style="display:flex;align-items:baseline;gap:10px;justify-content:center;margin:8px 0;">
           <div class="offer-original" style="font-size:20px;color:#4a5a6a;text-decoration:line-through;font-weight:500;display:none;">₹7,499</div>
-          <div class="plan-price" id="price-quarterly"><sup>₹</sup>7,499</div>
+          <div class="plan-price price-regular" id="price-quarterly"><sup>₹</sup>7,499</div>
+          <div class="plan-price price-offer" style="display:none;"><sup>₹</sup>6,000</div>
         </div>
         <div class="plan-period" id="period-quarterly">per 3 months</div>
         <div class="plan-save offer-badge" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:6px;padding:4px 12px;display:none;margin:6px 0;">
@@ -635,7 +647,8 @@ footer { background:var(--surface); border-top:1px solid var(--border); padding:
         <div class="plan-name">Annual</div>
         <div style="display:flex;align-items:baseline;gap:10px;justify-content:center;margin:8px 0;">
           <div class="offer-original" style="font-size:20px;color:#4a5a6a;text-decoration:line-through;font-weight:500;display:none;">₹18,000</div>
-          <div class="plan-price" id="price-annual"><sup>₹</sup>18,000</div>
+          <div class="plan-price price-regular" id="price-annual"><sup>₹</sup>18,000</div>
+          <div class="plan-price price-offer" style="display:none;"><sup>₹</sup>12,000</div>
         </div>
         <div class="plan-period" id="period-annual">per year</div>
         <div class="plan-save offer-badge" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:4px 12px;display:none;margin:6px 0;">
@@ -1563,13 +1576,16 @@ console.log('AlphaEdge offer loaded:', _oc);
 </script>
 <script>
 var _oc = loadOfferConfig();
+// Use CSS class on body — most reliable approach
+if (_oc.offer_active && new Date(_oc.offer_end) > new Date()) {
+  document.body.classList.add('offer-active');
+  console.log('Offer ON — discounted prices showing');
+} else {
+  document.body.classList.remove('offer-active');
+  console.log('Offer OFF — regular prices showing');
+}
 updateCountdown(_oc);
 updatePricing(_oc);
-setTimeout(function(){ updatePricing(loadOfferConfig()); }, 100);
-setTimeout(function(){ updatePricing(loadOfferConfig()); }, 500);
-setTimeout(function(){ updatePricing(loadOfferConfig()); }, 1000);
-setTimeout(function(){ updatePricing(loadOfferConfig()); }, 2000);
-console.log('AlphaEdge offer loaded:', _oc);
 </script>
 </body>
 </html>
