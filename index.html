@@ -1454,19 +1454,19 @@ document.querySelectorAll('section[id]').forEach(s => secObs.observe(s));
 // Countdown Timer — Admin controlled from admin.html
 // Admin sets end time via localStorage key 'ae_offer_end'
 // If no end time set OR expired — banner is hidden
-function updateCountdown() {
-  const stored = localStorage.getItem('ae_offer_end');
-  const banner = document.getElementById('spot-booking-banner');
-  const el = document.getElementById('countdown');
+function updateCountdown(cfg) {
+  var banner = document.getElementById('spot-booking-banner');
+  var el = document.getElementById('countdown');
+  if (!cfg) cfg = loadOfferConfig();
+  var offerOn = cfg.offer_active && new Date(cfg.offer_end) > new Date();
 
-  // If admin hasn't set an end time — hide banner completely
-  if (!OFFER_ACTIVE) {
+  if (!offerOn) {
     if (banner) banner.style.display = 'none';
     return;
   }
 
-  const endTime = new Date(config.offer_end).getTime();
-  const now = new Date().getTime();
+  var endTime = new Date(cfg.offer_end).getTime();
+  var now = new Date().getTime();
 
   if (now > endTime) {
     if (banner) banner.style.display = 'none';
@@ -1476,19 +1476,16 @@ function updateCountdown() {
   if (banner) banner.style.display = 'flex';
 
   function tick() {
-    const now = new Date().getTime();
-    const diff = endTime - now;
-
+    var now = new Date().getTime();
+    var diff = endTime - now;
     if (diff <= 0) {
       if (banner) banner.style.display = 'none';
       clearInterval(timer);
       return;
     }
-
-    const h = Math.floor(diff / (1000 * 60 * 60));
-    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((diff % (1000 * 60)) / 1000);
-
+    var h = Math.floor(diff / (1000 * 60 * 60));
+    var m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    var s = Math.floor((diff % (1000 * 60)) / 1000);
     if (el) {
       el.textContent =
         String(h).padStart(2,'0') + ':' +
@@ -1497,16 +1494,8 @@ function updateCountdown() {
     }
   }
   tick();
-  const timer = setInterval(tick, 1000);
+  var timer = setInterval(tick, 1000);
 }
-// offer init moved to bottom
-
-// ═══════════════════════════════════════════════
-// OFFER CONTROL — Edit ONE line below to activate
-// Change offer_active to true to show discounted prices
-// Change offer_end to set expiry date
-// Upload to GitHub after changing
-// ═══════════════════════════════════════════════
 
 
 function updatePricing(config) {
