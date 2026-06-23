@@ -1459,42 +1459,26 @@ function updateCountdown() {
   tick();
   const timer = setInterval(tick, 1000);
 }
-updateCountdown();
-updatePricing();
+// Load config from JSONBin then run everything
+loadOfferConfig().then(function(config) {
+  updateCountdown(config);
+  updatePricing(config);
+});
 
 // ═══════════════════════════════════════════════
-// OFFER CONTROL — Managed via JSONBin.io
-// Update offer status at jsonbin.io — no GitHub upload needed
-// Bin ID: 6a3acc26da38895dfef327da
+// OFFER CONTROL — Edit ONE line below to activate
+// Change offer_active to true to show discounted prices
+// Change offer_end to set expiry date
+// Upload to GitHub after changing
 // ═══════════════════════════════════════════════
-
-// Fetch offer config from JSONBin
 async function loadOfferConfig() {
-  try {
-    // Try public access first (no API key needed if bin is public)
-    const res = await fetch('https://api.jsonbin.io/v3/b/6a3acc26da38895dfef327da/latest?meta=false', {
-      method: 'GET',
-      headers: {
-        'X-Master-Key': '$2a$10$8Ih8RGPoUiur9Fos1N9QqOA/9eGjTITFmww1BE.ykFC6SnON3SB4u'
-      }
-    });
-    if (!res.ok) throw new Error('Fetch failed: ' + res.status);
-    const data = await res.json();
-    const record = data.record || data;
-    console.log('AlphaEdge offer config:', record);
-    // Cache in localStorage as backup
-    localStorage.setItem('ae_offer_config', JSON.stringify(record));
-    return record;
-  } catch(e) {
-    console.warn('JSONBin fetch failed:', e.message);
-    // Try cached config from localStorage
-    const cached = localStorage.getItem('ae_offer_config');
-    if (cached) {
-      console.log('Using cached config');
-      return JSON.parse(cached);
-    }
-    return { offer_active: false, offer_end: "2026-06-30T23:59:00" };
-  }
+  // ↓↓↓ EDIT THIS OBJECT TO CONTROL THE OFFER ↓↓↓
+  const CONFIG = {
+    offer_active : false,
+    offer_end    : "2026-06-30T23:59:00"
+  };
+  // ↑↑↑ EDIT ABOVE ONLY ↑↑↑
+  return CONFIG;
 }
 
 function updatePricing(config) {
