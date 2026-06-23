@@ -1061,18 +1061,18 @@ body.offer-active #spot-booking-banner { display: flex !important; }
     <div class="upi-plans">
       <div class="upi-plan-btn active" id="btn-monthly" onclick="selectUpiPlan('monthly')">
         <div class="p-name">Monthly</div>
-        <div class="p-price">₹999</div>
-        <div class="p-save">7 days free</div>
+        <div class="p-price upi-price-monthly">₹3,499</div>
+        <div class="p-save upi-save-monthly">Free 7-day trial</div>
       </div>
       <div class="upi-plan-btn" id="btn-quarterly" onclick="selectUpiPlan('quarterly')">
         <div class="p-name">Quarterly ⭐</div>
-        <div class="p-price">₹2,499</div>
-        <div class="p-save">Save 17%</div>
+        <div class="p-price upi-price-quarterly">₹7,499</div>
+        <div class="p-save upi-save-quarterly">Save 20%</div>
       </div>
       <div class="upi-plan-btn" id="btn-annual" onclick="selectUpiPlan('annual')">
         <div class="p-name">Annual</div>
-        <div class="p-price">₹7,999</div>
-        <div class="p-save">Save 33%</div>
+        <div class="p-price upi-price-annual">₹18,000</div>
+        <div class="p-save upi-save-annual">Save 33%</div>
       </div>
     </div>
 
@@ -1080,7 +1080,7 @@ body.offer-active #spot-booking-banner { display: flex !important; }
     <div class="qr-container">
       <div id="qr-code"></div>
       <div class="qr-label">Scan with any UPI app</div>
-      <div class="qr-amount" id="qr-amount">₹999</div>
+      <div class="qr-amount" id="qr-amount">₹3,499</div>
     </div>
 
     <!-- UPI ID copy -->
@@ -1275,6 +1275,19 @@ function openPayment(plan) {
   if (ms) ms.textContent = on ? 'Save ₹1,000' : 'Free 7-day trial';
   if (qs) qs.textContent = on ? 'Save ₹1,499' : 'Save 20%';
   if (as) as.textContent = on ? 'Save ₹6,000' : 'Save 33%';
+  // Update UPI plan buttons
+  var um = document.querySelector('.upi-price-monthly');
+  var uq = document.querySelector('.upi-price-quarterly');
+  var ua = document.querySelector('.upi-price-annual');
+  var ums = document.querySelector('.upi-save-monthly');
+  var uqs = document.querySelector('.upi-save-quarterly');
+  var uas = document.querySelector('.upi-save-annual');
+  if (um) um.textContent = on ? '₹2,499'  : '₹3,499';
+  if (uq) uq.textContent = on ? '₹6,000'  : '₹7,499';
+  if (ua) ua.textContent = on ? '₹12,000' : '₹18,000';
+  if (ums) ums.textContent = on ? 'Save ₹1,000' : 'Free 7-day trial';
+  if (uqs) uqs.textContent = on ? 'Save ₹1,499' : 'Save 20%';
+  if (uas) uas.textContent = on ? 'Save ₹6,000' : 'Save 33%';
   document.getElementById('payModal').classList.add('active');
   document.body.style.overflow = 'hidden';
   selectUpiPlan(plan);
