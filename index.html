@@ -1471,13 +1471,28 @@ updatePricing();
 // Fetch offer config from JSONBin
 async function loadOfferConfig() {
   try {
-    const res = await fetch('https://api.jsonbin.io/v3/b/6a3acc26da38895dfef327da/latest', {
-      headers: { 'X-Access-Key': '$2a$10$C6OpHfTrE8LOCoj.dzhgn.UgL1kNzPJ.qgzJ310w8vX12BrXB0Ka2' }
+    // Try public access first (no API key needed if bin is public)
+    const res = await fetch('https://api.jsonbin.io/v3/b/6a3acc26da38895dfef327da/latest?meta=false', {
+      method: 'GET',
+      headers: {
+        'X-Master-Key': '$2a$10$8Ih8RGPoUiur9Fos1N9QqOA/9eGjTITFmww1BE.ykFC6SnON3SB4u'
+      }
     });
+    if (!res.ok) throw new Error('Fetch failed: ' + res.status);
     const data = await res.json();
-    return data.record;
+    const record = data.record || data;
+    console.log('AlphaEdge offer config:', record);
+    // Cache in localStorage as backup
+    localStorage.setItem('ae_offer_config', JSON.stringify(record));
+    return record;
   } catch(e) {
-    // Fallback to defaults if fetch fails
+    console.warn('JSONBin fetch failed:', e.message);
+    // Try cached config from localStorage
+    const cached = localStorage.getItem('ae_offer_config');
+    if (cached) {
+      console.log('Using cached config');
+      return JSON.parse(cached);
+    }
     return { offer_active: false, offer_end: "2026-06-30T23:59:00" };
   }
 }
