@@ -620,11 +620,11 @@ body.offer-active #spot-booking-banner { display: flex !important; }
         <div style="display:flex;align-items:baseline;gap:10px;justify-content:center;margin:8px 0;">
           <div class="offer-original" style="font-size:20px;color:#4a5a6a;text-decoration:line-through;font-weight:500;display:none;">₹7,499</div>
           <div class="plan-price price-regular" id="price-quarterly"><sup>₹</sup>7,499</div>
-          <div class="plan-price price-offer" style="display:none;"><sup>₹</sup>6,000</div>
+          <div class="plan-price price-offer" style="display:none;"><sup>₹</sup>5,000</div>
         </div>
         <div class="plan-period" id="period-quarterly">per 3 months</div>
         <div class="plan-save offer-badge" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:6px;padding:4px 12px;display:none;margin:6px 0;">
-          Save ₹1,499 · 20% OFF
+          Save ₹2,499 · 33% OFF
         </div>
         <hr class="plan-divider">
         <ul class="plan-features">
@@ -1145,7 +1145,7 @@ planDetails = (function() {
   var on = cfg.offer_active && new Date(cfg.offer_end) > new Date();
   return {
     monthly:   { name:'Monthly Plan',   price: on ? '₹2,499'  : '₹3,499',  amount: on ? '2499'  : '3499'  },
-    quarterly: { name:'Quarterly Plan', price: on ? '₹6,000'  : '₹7,499',  amount: on ? '6000'  : '7499'  },
+    quarterly: { name:'Quarterly Plan', price: on ? '₹5,000'  : '₹7,499',  amount: on ? '5000'  : '7499'  },
     annual:    { name:'Annual Plan',    price: on ? '₹12,000' : '₹18,000', amount: on ? '12000' : '18000' },
   };
 })();
@@ -1270,10 +1270,10 @@ function openPayment(plan) {
   var qs = document.querySelector('.modal-save-quarterly');
   var as = document.querySelector('.modal-save-annual');
   if (mp) mp.textContent = on ? '₹2,499'  : '₹3,499';
-  if (qp) qp.textContent = on ? '₹6,000'  : '₹7,499';
+  if (qp) qp.textContent = on ? '₹5,000'  : '₹7,499';
   if (ap) ap.textContent = on ? '₹12,000' : '₹18,000';
   if (ms) ms.textContent = on ? 'Save ₹1,000' : 'Free 7-day trial';
-  if (qs) qs.textContent = on ? 'Save ₹1,499' : 'Save 20%';
+  if (qs) qs.textContent = on ? 'Save ₹2,499' : 'Save 33%';
   if (as) as.textContent = on ? 'Save ₹6,000' : 'Save 33%';
   // Update UPI plan buttons
   var um = document.querySelector('.upi-price-monthly');
@@ -1283,10 +1283,10 @@ function openPayment(plan) {
   var uqs = document.querySelector('.upi-save-quarterly');
   var uas = document.querySelector('.upi-save-annual');
   if (um) um.textContent = on ? '₹2,499'  : '₹3,499';
-  if (uq) uq.textContent = on ? '₹6,000'  : '₹7,499';
+  if (uq) uq.textContent = on ? '₹5,000'  : '₹7,499';
   if (ua) ua.textContent = on ? '₹12,000' : '₹18,000';
   if (ums) ums.textContent = on ? 'Save ₹1,000' : 'Free 7-day trial';
-  if (uqs) uqs.textContent = on ? 'Save ₹1,499' : 'Save 20%';
+  if (uqs) uqs.textContent = on ? 'Save ₹2,499' : 'Save 33%';
   if (uas) uas.textContent = on ? 'Save ₹6,000' : 'Save 33%';
   document.getElementById('payModal').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -1553,9 +1553,9 @@ function updatePricing(config) {
   if (pm && pq && pa) {
     if (offerActive) {
       pm.innerHTML  = '<sup>₹</sup>2,499';
-      pq.innerHTML  = '<sup>₹</sup>6,000';
+      pq.innerHTML  = '<sup>₹</sup>5,000';
       pa.innerHTML  = '<sup>₹</sup>12,000';
-      if (peq) peq.textContent = 'per 3 months · ₹2,000/mo';
+      if (peq) peq.textContent = 'per 3 months · ₹1,667/mo';
       if (pea) pea.textContent = 'per year · ₹1,000/mo';
     } else {
       pm.innerHTML  = '<sup>₹</sup>3,499';
@@ -1573,7 +1573,7 @@ function updatePricing(config) {
 function validateCoupon(plan) {
   const prices = {
     monthly:   { regular: 3499, discounted: 2499 },
-    quarterly: { regular: 7499, discounted: 6000 },
+    quarterly: { regular: 7499, discounted: 5000 },
     annual:    { regular: 18000, discounted: 12000 }
   };
   const code = document.getElementById('coupon-input') ? 
@@ -1606,7 +1606,7 @@ if (offerOn) {
   var qs = document.querySelector('.modal-save-quarterly');
   var as = document.querySelector('.modal-save-annual');
   if (mp) mp.textContent = '₹2,499';
-  if (qp) qp.textContent = '₹6,000';
+  if (qp) qp.textContent = '₹5,000';
   if (ap) ap.textContent = '₹12,000';
   if (ms) ms.textContent = 'Save ₹1,000';
   if (qs) qs.textContent = 'Save ₹1,499';
