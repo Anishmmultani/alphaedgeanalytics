@@ -1404,7 +1404,7 @@ const TICKER_SYMBOLS = [
 // Fetch single stock via open.er-api or NSE India open endpoint
 async function fetchSingleStock(id, label) {
   // Use Yahoo Finance via a public JSONP-style endpoint
-  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${id}?interval=1d&range=2d`;
+  const url = `https://corsproxy.io/?https://query2.finance.yahoo.com/v8/finance/chart/${id}?interval=1d&range=2d`;
   const res  = await fetch(url);
   const data = await res.json();
   const meta = data?.chart?.result?.[0]?.meta;
