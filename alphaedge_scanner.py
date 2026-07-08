@@ -244,7 +244,163 @@ def get_gainers_losers_volume(fo_stocks):
         return [], [], []
 
 # ═══════════════════════════════════════════════════════════════
-# SECTION 5 — OHLCV DATA FETCH
+# SECTION 5 — SECTOR INDICES + STOCK→SECTOR MAPPING
+# ═══════════════════════════════════════════════════════════════
+
+# NSE Sectoral Indices — Yahoo Finance symbols
+SECTOR_INDICES = {
+    "NIFTY BANK"       : "^NSEBANK",
+    "NIFTY IT"         : "^CNXIT",
+    "NIFTY PHARMA"     : "^CNXPHARMA",
+    "NIFTY AUTO"       : "^CNXAUTO",
+    "NIFTY FMCG"       : "^CNXFMCG",
+    "NIFTY METAL"      : "^CNXMETAL",
+    "NIFTY REALTY"     : "^CNXREALTY",
+    "NIFTY ENERGY"     : "^CNXENERGY",
+    "NIFTY PSU BANK"   : "^CNXPSUBANK",
+    "NIFTY FIN SERVICE": "^CNXFINANCE",
+    "NIFTY INFRA"      : "^CNXINFRA",
+    "NIFTY OIL & GAS"  : "^CNXOILGAS",
+    "NIFTY HEALTHCARE" : "^CNXHEALTH",
+    "NIFTY MEDIA"      : "^CNXMEDIA",
+}
+
+# Stock → Sector mapping (primary sector per stock)
+STOCK_SECTOR_MAP = {
+    # Banking & Finance
+    "HDFCBANK"   : "NIFTY BANK",
+    "ICICIBANK"  : "NIFTY BANK",
+    "AXISBANK"   : "NIFTY BANK",
+    "KOTAKBANK"  : "NIFTY BANK",
+    "SBIN"       : "NIFTY PSU BANK",
+    "BANKBARODA" : "NIFTY PSU BANK",
+    "PNB"        : "NIFTY PSU BANK",
+    "CANBK"      : "NIFTY PSU BANK",
+    "BAJFINANCE" : "NIFTY FIN SERVICE",
+    "BAJAJFINSV" : "NIFTY FIN SERVICE",
+    "HDFCLIFE"   : "NIFTY FIN SERVICE",
+    "SBILIFE"    : "NIFTY FIN SERVICE",
+    "INDUSINDBK" : "NIFTY BANK",
+    # IT
+    "INFY"       : "NIFTY IT",
+    "TCS"        : "NIFTY IT",
+    "WIPRO"      : "NIFTY IT",
+    "HCLTECH"    : "NIFTY IT",
+    "TECHM"      : "NIFTY IT",
+    "LTIM"       : "NIFTY IT",
+    "MPHASIS"    : "NIFTY IT",
+    "PERSISTENT" : "NIFTY IT",
+    # Pharma & Healthcare
+    "SUNPHARMA"  : "NIFTY PHARMA",
+    "DRREDDY"    : "NIFTY PHARMA",
+    "CIPLA"      : "NIFTY PHARMA",
+    "DIVISLAB"   : "NIFTY PHARMA",
+    "APOLLOHOSP" : "NIFTY HEALTHCARE",
+    "MAXHEALTH"  : "NIFTY HEALTHCARE",
+    # Auto
+    "TATAMOTORS" : "NIFTY AUTO",
+    "MARUTI"     : "NIFTY AUTO",
+    "EICHERMOT"  : "NIFTY AUTO",
+    "HEROMOTOCO" : "NIFTY AUTO",
+    "BAJAJ-AUTO" : "NIFTY AUTO",
+    "M&M"        : "NIFTY AUTO",
+    # FMCG
+    "HINDUNILVR" : "NIFTY FMCG",
+    "NESTLEIND"  : "NIFTY FMCG",
+    "BRITANNIA"  : "NIFTY FMCG",
+    "TATACONSUM" : "NIFTY FMCG",
+    "GODREJCP"   : "NIFTY FMCG",
+    # Metals
+    "TATASTEEL"  : "NIFTY METAL",
+    "JSWSTEEL"   : "NIFTY METAL",
+    "HINDALCO"   : "NIFTY METAL",
+    "COALINDIA"  : "NIFTY METAL",
+    "NMDC"       : "NIFTY METAL",
+    "VEDL"       : "NIFTY METAL",
+    # Energy & Oil
+    "RELIANCE"   : "NIFTY OIL & GAS",
+    "ONGC"       : "NIFTY OIL & GAS",
+    "BPCL"       : "NIFTY OIL & GAS",
+    "IOC"        : "NIFTY OIL & GAS",
+    "GAIL"       : "NIFTY OIL & GAS",
+    "NTPC"       : "NIFTY ENERGY",
+    "POWERGRID"  : "NIFTY ENERGY",
+    "ADANIGREEN" : "NIFTY ENERGY",
+    # Infra & Real Estate
+    "LT"         : "NIFTY INFRA",
+    "ADANIPORTS" : "NIFTY INFRA",
+    "ADANIENT"   : "NIFTY INFRA",
+    "DLF"        : "NIFTY REALTY",
+    "GODREJPROP" : "NIFTY REALTY",
+    # Consumer / Others
+    "ASIANPAINT" : "NIFTY FMCG",
+    "TITAN"      : "NIFTY FMCG",
+    "ULTRACEMCO" : "NIFTY INFRA",
+    "SHREECEM"   : "NIFTY INFRA",
+    "GRASIM"     : "NIFTY INFRA",
+    # Media
+    "ZEEL"       : "NIFTY MEDIA",
+    "SUNTV"      : "NIFTY MEDIA",
+}
+
+def get_sector_bias():
+    """
+    Fetch all sectoral indices and determine BULLISH/BEARISH/NEUTRAL
+    Returns: dict {sector_name: {bias, pct_change, ema_bias}}
+    """
+    import yfinance as yf
+    sector_data = {}
+
+    for sector_name, yf_symbol in SECTOR_INDICES.items():
+        try:
+            ticker = yf.Ticker(yf_symbol)
+            df = ticker.history(period="5d", interval="15m")
+
+            if df is None or df.empty:
+                sector_data[sector_name] = {
+                    "bias": "NEUTRAL", "pct_change": 0.0, "ema_bias": "NEUTRAL"
+                }
+                continue
+
+            df = df.rename(columns={"Close": "close"})
+            current_price = df["close"].iloc[-1]
+            prev_close    = df["close"].iloc[0]
+            pct_change    = ((current_price - prev_close) / prev_close) * 100
+
+            # EMA 21 on 15min
+            ema = df["close"].ewm(span=21, adjust=False).mean().iloc[-1]
+            ema_bias = "BUY" if current_price > ema else "SELL"
+
+            # Bias by % change
+            if pct_change >= 0.5:
+                bias = "BULLISH"
+            elif pct_change <= -0.5:
+                bias = "BEARISH"
+            else:
+                bias = "NEUTRAL"
+
+            sector_data[sector_name] = {
+                "bias"      : bias,
+                "pct_change": round(pct_change, 2),
+                "ema_bias"  : ema_bias
+            }
+            log.info(f"Sector {sector_name}: {bias} ({pct_change:.2f}%)")
+            time_module.sleep(0.3)
+
+        except Exception as e:
+            log.error(f"Sector fetch failed for {sector_name}: {e}")
+            sector_data[sector_name] = {
+                "bias": "NEUTRAL", "pct_change": 0.0, "ema_bias": "NEUTRAL"
+            }
+
+    return sector_data
+
+def get_stock_sector(symbol):
+    """Get primary sector for a stock"""
+    return STOCK_SECTOR_MAP.get(symbol, None)
+
+# ═══════════════════════════════════════════════════════════════
+# SECTION 6 — OHLCV DATA FETCH
 # ═══════════════════════════════════════════════════════════════
 
 def fetch_ohlcv(symbol, interval_minutes, period_days=10):
@@ -411,10 +567,12 @@ def calculate_strength(ema_htf_bias, ema_mtf_bias):
 
 def calculate_score(symbol, market_bias, gainers, losers,
                     shockers, ema_htf_bias, ema_mtf_bias,
-                    current_price, support, resistance):
+                    current_price, support, resistance, sector_data):
     """
-    Calculate confluence score 0-6:
+    Calculate confluence score 0-8:
     +1 Market bias matches direction
+    +1 Sector bias matches direction
+    +1 Sector EMA confirms direction
     +1 Stock in Top 5 Gainers/Losers
     +1 Volume Shocker
     +1 EMA HTF confirms
@@ -433,15 +591,37 @@ def calculate_score(symbol, market_bias, gainers, losers,
     elif "SELL" in strength:
         direction = "SELL"
     else:
-        return 0, "NEUTRAL", strength, []
+        return 0, "NEUTRAL", strength, [], "UNKNOWN", "NEUTRAL"
 
     # +1 Market bias matches
     if (direction == "BUY"  and market_bias == "BULLISH") or \
        (direction == "SELL" and market_bias == "BEARISH"):
         score += 1
         reasons.append("Market Bias ✅")
-    elif market_bias == "NEUTRAL":
-        pass  # neutral market — no point added
+
+    # +1 Sector bias matches + +1 Sector EMA confirms
+    sector_name = get_stock_sector(symbol)
+    sector_bias_str  = "UNKNOWN"
+    sector_pct_str   = ""
+
+    if sector_name and sector_name in sector_data:
+        s = sector_data[sector_name]
+        sector_bias_str = s["bias"]
+        sector_pct_str  = f"{s['pct_change']:+.2f}%"
+
+        # +1 Sector % change bias matches direction
+        if (direction == "BUY"  and s["bias"] == "BULLISH") or \
+           (direction == "SELL" and s["bias"] == "BEARISH"):
+            score += 1
+            reasons.append(f"Sector {sector_name} {s['bias']} ({sector_pct_str}) ✅")
+
+        # +1 Sector EMA confirms direction
+        if (direction == "BUY"  and s["ema_bias"] == "BUY") or \
+           (direction == "SELL" and s["ema_bias"] == "SELL"):
+            score += 1
+            reasons.append(f"Sector EMA {s['ema_bias']} ✅")
+    else:
+        sector_bias_str = "N/A"
 
     # +1 In top gainers/losers
     gainer_symbols  = [g["symbol"] for g in gainers]
@@ -462,7 +642,7 @@ def calculate_score(symbol, market_bias, gainers, losers,
         vol_ratio = next(s["vol_ratio"] for s in shockers
                          if s["symbol"] == symbol)
         score += 1
-        reasons.append(f"Vol Shocker {vol_ratio:.1f}x 🔥")
+        reasons.append(f"Vol Shocker {vol_ratio:.1f}x")
 
     # +1 EMA HTF confirms
     if (direction == "BUY"  and ema_htf_bias == "BUY") or \
@@ -479,7 +659,7 @@ def calculate_score(symbol, market_bias, gainers, losers,
     # +1 Price near key zone (within 0.5%)
     # Phase 2: replaced with full OB Zone logic
     if current_price and support and resistance:
-        zone_pct = 0.005  # 0.5%
+        zone_pct = 0.005
         if direction == "BUY" and support:
             if abs(current_price - support) / current_price <= zone_pct:
                 score += 1
@@ -489,7 +669,7 @@ def calculate_score(symbol, market_bias, gainers, losers,
                 score += 1
                 reasons.append("Near Resistance Zone ✅")
 
-    return score, direction, strength, reasons
+    return score, direction, strength, reasons, sector_name or "N/A", sector_bias_str
 
 # ═══════════════════════════════════════════════════════════════
 # SECTION 10 — MAIN SCANNER
@@ -507,8 +687,11 @@ def run_scan():
     fo_stocks = get_fo_stocks()
     gainers, losers, shockers = get_gainers_losers_volume(fo_stocks)
 
+    # ── Fetch sector data ──
+    log.info("Fetching sector indices...")
+    sector_data = get_sector_bias()
+
     # ── Candidate stocks to check ──
-    # All gainers + losers + shockers (deduplicated)
     candidates = set()
     for g in gainers:  candidates.add(g["symbol"])
     for l in losers:   candidates.add(l["symbol"])
@@ -523,24 +706,26 @@ def run_scan():
         ema_htf, ema_mtf, price = get_ema_bias(symbol)
         support, resistance      = get_key_levels(symbol)
 
-        score, direction, strength, reasons = calculate_score(
+        score, direction, strength, reasons, sector_name, sector_bias = calculate_score(
             symbol, market_bias, gainers, losers,
             shockers, ema_htf, ema_mtf, price,
-            support, resistance
+            support, resistance, sector_data
         )
 
         if score >= MIN_SCORE_TO_ALERT:
             results.append({
-                "symbol"   : symbol,
-                "price"    : price,
-                "direction": direction,
-                "strength" : strength,
-                "ema_htf"  : ema_htf,
-                "ema_mtf"  : ema_mtf,
-                "score"    : score,
-                "reasons"  : reasons
+                "symbol"      : symbol,
+                "price"       : price,
+                "direction"   : direction,
+                "strength"    : strength,
+                "ema_htf"     : ema_htf,
+                "ema_mtf"     : ema_mtf,
+                "score"       : score,
+                "reasons"     : reasons,
+                "sector_name" : sector_name,
+                "sector_bias" : sector_bias
             })
-        time_module.sleep(0.5)  # avoid rate limiting
+        time_module.sleep(0.5)
 
     # ── Sort by score ──
     results.sort(key=lambda x: x["score"], reverse=True)
@@ -558,35 +743,51 @@ def run_scan():
     msg += f"➡️ Unchanged: {unchanged}\n"
     msg += f"━━━━━━━━━━━━━━━━━━━━\n\n"
 
+    # ── Sector Snapshot ──
+    msg += f"🏭 <b>SECTOR SNAPSHOT:</b>\n"
+    for sname, sinfo in sector_data.items():
+        s_emoji = "🟢" if sinfo["bias"] == "BULLISH" else \
+                  "🔴" if sinfo["bias"] == "BEARISH" else "🟡"
+        pct = sinfo["pct_change"]
+        msg += f"{s_emoji} {sname:<20} {pct:+.2f}%\n"
+    msg += f"━━━━━━━━━━━━━━━━━━━━\n\n"
+
+    # ── Results ──
     if not results:
         msg += "🔍 No high confluence setups found.\n"
         msg += "Waiting for next scan...\n"
     else:
-        high   = [r for r in results if r["score"] >= 5]
-        medium = [r for r in results if r["score"] == 4]
+        high   = [r for r in results if r["score"] >= 6]
+        medium = [r for r in results if 4 <= r["score"] <= 5]
 
         if high:
             msg += "🔥 <b>HIGH PRIORITY SETUPS:</b>\n\n"
             for i, r in enumerate(high, 1):
                 d_emoji = "🟢" if r["direction"] == "BUY" else "🔴"
-                msg += f"{i}. {d_emoji} <b>{r['symbol']}</b>  ₹{r['price']:.2f}\n"
+                s_emoji = "🟢" if r["sector_bias"] == "BULLISH" else \
+                          "🔴" if r["sector_bias"] == "BEARISH" else "🟡"
+                msg += f"{i}. {d_emoji} <b>{r['symbol']}</b>  Rs.{r['price']:.2f}\n"
                 msg += f"   Strength: <b>{r['strength']}</b>\n"
+                msg += f"   Sector: {s_emoji} {r['sector_name']} ({r['sector_bias']})\n"
                 msg += f"   EMA HTF: {r['ema_htf']} | MTF: {r['ema_mtf']}\n"
-                msg += f"   Score: {r['score']}/6\n"
+                msg += f"   Score: {r['score']}/8\n"
                 for reason in r["reasons"]:
-                    msg += f"   • {reason}\n"
+                    msg += f"   - {reason}\n"
                 msg += "\n"
 
         if medium:
             msg += "✅ <b>WATCH LIST:</b>\n"
             for r in medium:
                 d_emoji = "🟢" if r["direction"] == "BUY" else "🔴"
-                msg += f"• {d_emoji} {r['symbol']} ₹{r['price']:.2f} "
-                msg += f"— {r['strength']} (Score {r['score']}/6)\n"
+                s_emoji = "🟢" if r["sector_bias"] == "BULLISH" else \
+                          "🔴" if r["sector_bias"] == "BEARISH" else "🟡"
+                msg += f"- {d_emoji} {r['symbol']} Rs.{r['price']:.2f} "
+                msg += f"| {r['strength']} "
+                msg += f"| {s_emoji} {r['sector_name']} "
+                msg += f"| Score {r['score']}/8\n"
 
     msg += f"\n━━━━━━━━━━━━━━━━━━━━\n"
-    msg += f"⚡ <i>Verify zones on AlphaEdge V3\n"
-    msg += f"before entering any trade!</i>"
+    msg += f"Verify zones on AlphaEdge V3 before entering any trade!"
 
     send_telegram(msg)
     log.info("Scan complete.")
