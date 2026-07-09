@@ -691,6 +691,18 @@ def run_scan():
     log.info("Fetching sector indices...")
     sector_data = get_sector_bias()
 
+    # ── Fallback: if breadth API failed use sector data for market bias ──
+    if market_bias == "NEUTRAL" and advances == 0 and declines == 0:
+        bullish_sectors = sum(1 for s in sector_data.values() if s["bias"] == "BULLISH")
+        bearish_sectors = sum(1 for s in sector_data.values() if s["bias"] == "BEARISH")
+        total_sectors   = len(sector_data)
+        if total_sectors > 0:
+            if bullish_sectors / total_sectors >= BULLISH_THRESHOLD:
+                market_bias = "BULLISH (Sector)"
+            elif bearish_sectors / total_sectors >= BEARISH_THRESHOLD:
+                market_bias = "BEARISH (Sector)"
+        log.info(f"Breadth API failed — using sector fallback: {market_bias}")
+
     # ── Candidate stocks to check ──
     candidates = set()
     for g in gainers:  candidates.add(g["symbol"])
