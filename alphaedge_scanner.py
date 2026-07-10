@@ -87,88 +87,83 @@ def send_telegram(message):
 # ═══════════════════════════════════════════════════════════════
 
 def get_fo_stocks():
-    """Fetch current F&O stock list from NSE"""
-    try:
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "application/json",
-            "Referer": "https://www.nseindia.com"
-        }
-        session = requests.Session()
-        # First hit NSE homepage to get cookies
-        session.get("https://www.nseindia.com", headers=headers, timeout=10)
-        
-        # Fetch F&O stock list
-        url = "https://www.nseindia.com/api/equity-stockIndices?index=SECURITIES%20IN%20F%26O"
-        r = session.get(url, headers=headers, timeout=15)
-        data = r.json()
-        
-        stocks = []
-        for item in data.get("data", []):
-            symbol = item.get("symbol", "")
-            if symbol and symbol not in ["NIFTY 50", "Nifty 50"]:
-                stocks.append(symbol)
-        
-        log.info(f"F&O stocks fetched: {len(stocks)}")
-        return stocks
-    except Exception as e:
-        log.error(f"F&O stock list fetch failed: {e}")
-        # Fallback list — Nifty 50 stocks
-        return [
-            "RELIANCE","HDFCBANK","ICICIBANK","INFY","TCS",
-            "AXISBANK","KOTAKBANK","SBIN","BAJFINANCE","TATAMOTORS",
-            "MARUTI","WIPRO","ADANIENT","ULTRACEMCO","TITAN",
-            "SUNPHARMA","ONGC","NTPC","POWERGRID","COALINDIA",
-            "BAJAJFINSV","HCLTECH","TECHM","NESTLEIND","BRITANNIA",
-            "DIVISLAB","DRREDDY","CIPLA","EICHERMOT","HEROMOTOCO",
-            "TATACONSUM","HINDUNILVR","ASIANPAINT","INDUSINDBK",
-            "JSWSTEEL","TATASTEEL","HINDALCO","BPCL","IOC",
-            "GRASIM","SHREECEM","LTIM","LT","M&M",
-            "APOLLOHOSP","ADANIPORTS","BAJAJ-AUTO","SBILIFE","HDFCLIFE"
-        ]
-
-# ═══════════════════════════════════════════════════════════════
-# SECTION 3 — MARKET BREADTH
-# ═══════════════════════════════════════════════════════════════
+    """
+    Return F&O eligible stocks — Nifty 100 
+    Using static list (works from any IP)
+    """
+    return [
+        "RELIANCE","HDFCBANK","ICICIBANK","INFY","TCS",
+        "AXISBANK","KOTAKBANK","SBIN","BAJFINANCE","TATAMOTORS",
+        "MARUTI","WIPRO","ADANIENT","ULTRACEMCO","TITAN",
+        "SUNPHARMA","ONGC","NTPC","POWERGRID","COALINDIA",
+        "BAJAJFINSV","HCLTECH","TECHM","NESTLEIND","BRITANNIA",
+        "DIVISLAB","DRREDDY","CIPLA","EICHERMOT","HEROMOTOCO",
+        "TATACONSUM","HINDUNILVR","ASIANPAINT","INDUSINDBK",
+        "JSWSTEEL","TATASTEEL","HINDALCO","BPCL","IOC",
+        "GRASIM","SHREECEM","LTIM","LT","M&M",
+        "APOLLOHOSP","ADANIPORTS","BAJAJ-AUTO","SBILIFE","HDFCLIFE",
+        "BANKBARODA","PNB","CANBK","VEDL","NMDC",
+        "GODREJCP","GODREJPROP","DLF","ZEEL","SUNTV",
+        "GAIL","ADANIGREEN","MAXHEALTH","MPHASIS","PERSISTENT",
+        "HDFCAMC","PIIND","ALKEM","AUROPHARMA","BIOCON",
+        "BERGEPAINT","HAVELLS","VOLTAS","WHIRLPOOL","PAGEIND",
+        "JUBLFOOD","TRENT","NYKAA","DMART","ZOMATO",
+        "PAYTM","IRFC","RAILTEL","HAL","BEL",
+        "SAIL","MOIL","RECLTD","PFC","NHPC",
+        "TORNTPHARM","LUPIN","ABBOTINDIA","GLAXO","PFIZER",
+        "BOSCHLTD","MOTHERSON","BALKRISIND","APOLLOTYRE","MRF"
+    ]
 
 def get_market_breadth():
     """
-    Fetch market breadth from NSE
+    Fetch market breadth using Yahoo Finance Nifty 50 components
+    Works from Singapore and any IP
     Returns: advances, declines, unchanged, bias
     """
     try:
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "application/json",
-            "Referer": "https://www.nseindia.com"
-        }
-        session = requests.Session()
-        session.get("https://www.nseindia.com", headers=headers, timeout=10)
-        
-        url = "https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050"
-        r = session.get(url, headers=headers, timeout=15)
-        data = r.json()
-        
-        advances  = data.get("advance", {}).get("advances", 0)
-        declines  = data.get("advance", {}).get("declines", 0)
-        unchanged = data.get("advance", {}).get("unchanged", 0)
-        
-        advances  = int(advances)  if advances  else 0
-        declines  = int(declines)  if declines  else 0
-        unchanged = int(unchanged) if unchanged else 0
-        total     = advances + declines + unchanged
+        import yfinance as yf
 
+        nifty50 = [
+            "RELIANCE.NS","HDFCBANK.NS","ICICIBANK.NS","INFY.NS","TCS.NS",
+            "AXISBANK.NS","KOTAKBANK.NS","SBIN.NS","BAJFINANCE.NS","TATAMOTORS.NS",
+            "MARUTI.NS","WIPRO.NS","ADANIENT.NS","ULTRACEMCO.NS","TITAN.NS",
+            "SUNPHARMA.NS","ONGC.NS","NTPC.NS","POWERGRID.NS","COALINDIA.NS",
+            "BAJAJFINSV.NS","HCLTECH.NS","TECHM.NS","NESTLEIND.NS","BRITANNIA.NS",
+            "DIVISLAB.NS","DRREDDY.NS","CIPLA.NS","EICHERMOT.NS","HEROMOTOCO.NS",
+            "TATACONSUM.NS","HINDUNILVR.NS","ASIANPAINT.NS","INDUSINDBK.NS",
+            "JSWSTEEL.NS","TATASTEEL.NS","HINDALCO.NS","BPCL.NS","IOC.NS",
+            "GRASIM.NS","LT.NS","M&M.NS","APOLLOHOSP.NS","ADANIPORTS.NS",
+            "BAJAJ-AUTO.NS","SBILIFE.NS","HDFCLIFE.NS","LTIM.NS","SHREECEM.NS"
+        ]
+
+        data = yf.download(
+            tickers=" ".join(nifty50),
+            period="2d", interval="1d",
+            group_by="ticker",
+            auto_adjust=True, progress=False
+        )
+
+        advances = declines = unchanged = 0
+
+        for stock in nifty50:
+            try:
+                closes = data[stock]["Close"].dropna()
+                if len(closes) >= 2:
+                    chg = closes.iloc[-1] - closes.iloc[-2]
+                    if chg > 0:   advances  += 1
+                    elif chg < 0: declines  += 1
+                    else:         unchanged += 1
+            except:
+                continue
+
+        total = advances + declines + unchanged
         if total == 0:
             return 0, 0, 0, "NEUTRAL"
 
         ratio = advances / total
-
-        if ratio >= BULLISH_THRESHOLD:
-            bias = "BULLISH"
-        elif ratio <= BEARISH_THRESHOLD:
-            bias = "BEARISH"
-        else:
-            bias = "NEUTRAL"
+        if ratio >= BULLISH_THRESHOLD:   bias = "BULLISH"
+        elif ratio <= BEARISH_THRESHOLD: bias = "BEARISH"
+        else:                            bias = "NEUTRAL"
 
         log.info(f"Breadth — Advances: {advances}, Declines: {declines}, Bias: {bias}")
         return advances, declines, unchanged, bias
@@ -177,64 +172,64 @@ def get_market_breadth():
         log.error(f"Market breadth fetch failed: {e}")
         return 0, 0, 0, "NEUTRAL"
 
-# ═══════════════════════════════════════════════════════════════
-# SECTION 4 — TOP GAINERS / LOSERS / VOLUME SHOCKERS
-# ═══════════════════════════════════════════════════════════════
-
 def get_gainers_losers_volume(fo_stocks):
     """
     Fetch top gainers, losers and volume shockers
-    from F&O stock list
+    Using Yahoo Finance — works from Singapore
     """
     try:
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "application/json",
-            "Referer": "https://www.nseindia.com"
-        }
-        session = requests.Session()
-        session.get("https://www.nseindia.com", headers=headers, timeout=10)
+        import yfinance as yf
 
-        url = "https://www.nseindia.com/api/equity-stockIndices?index=SECURITIES%20IN%20F%26O"
-        r = session.get(url, headers=headers, timeout=15)
-        data = r.json()
+        # Add .NS suffix for Yahoo Finance
+        yf_symbols = [s + ".NS" for s in fo_stocks]
+
+        # Download all at once
+        data = yf.download(
+            tickers=" ".join(yf_symbols),
+            period="5d", interval="1d",
+            group_by="ticker",
+            auto_adjust=True, progress=False
+        )
 
         stocks_data = []
-        for item in data.get("data", []):
-            symbol = item.get("symbol", "")
-            if symbol not in fo_stocks:
-                continue
+        for symbol in fo_stocks:
+            yf_sym = symbol + ".NS"
             try:
-                pct_change  = float(item.get("pChange", 0))
-                last_price  = float(item.get("lastPrice", 0))
-                total_vol   = float(item.get("totalTradedVolume", 0))
-                avg_vol     = float(item.get("averageTradedVolume", total_vol))  
-                vol_ratio   = (total_vol / avg_vol) if avg_vol > 0 else 1.0
+                df = data[yf_sym]
+                closes = df["Close"].dropna()
+                volumes = df["Volume"].dropna()
+
+                if len(closes) < 2:
+                    continue
+
+                prev_close  = closes.iloc[-2]
+                today_close = closes.iloc[-1]
+                pct_change  = ((today_close - prev_close) / prev_close) * 100
+
+                today_vol = volumes.iloc[-1]
+                avg_vol   = volumes.iloc[:-1].mean()
+                vol_ratio = today_vol / avg_vol if avg_vol > 0 else 1.0
 
                 stocks_data.append({
                     "symbol"    : symbol,
-                    "price"     : last_price,
-                    "pct_change": pct_change,
-                    "volume"    : total_vol,
+                    "price"     : round(today_close, 2),
+                    "pct_change": round(pct_change, 2),
+                    "volume"    : today_vol,
                     "avg_volume": avg_vol,
-                    "vol_ratio" : vol_ratio
+                    "vol_ratio" : round(vol_ratio, 2)
                 })
             except:
                 continue
 
-        df = pd.DataFrame(stocks_data)
-        if df.empty:
+        if not stocks_data:
             return [], [], []
 
-        # Top gainers
-        gainers = df.nlargest(TOP_N, "pct_change").to_dict("records")
+        import pandas as pd
+        df = pd.DataFrame(stocks_data)
 
-        # Top losers
-        losers = df.nsmallest(TOP_N, "pct_change").to_dict("records")
-
-        # Volume shockers — vol ratio > threshold
-        shockers = df[df["vol_ratio"] >= VOLUME_SHOCK_MULTIPLIER]\
-                     .nlargest(TOP_N, "vol_ratio").to_dict("records")
+        gainers  = df.nlargest(TOP_N, "pct_change").to_dict("records")
+        losers   = df.nsmallest(TOP_N, "pct_change").to_dict("records")
+        shockers = df[df["vol_ratio"] >= VOLUME_SHOCK_MULTIPLIER].nlargest(TOP_N, "vol_ratio").to_dict("records")
 
         log.info(f"Gainers: {len(gainers)}, Losers: {len(losers)}, Shockers: {len(shockers)}")
         return gainers, losers, shockers
@@ -242,106 +237,6 @@ def get_gainers_losers_volume(fo_stocks):
     except Exception as e:
         log.error(f"Gainers/Losers fetch failed: {e}")
         return [], [], []
-
-# ═══════════════════════════════════════════════════════════════
-# SECTION 5 — SECTOR INDICES + STOCK→SECTOR MAPPING
-# ═══════════════════════════════════════════════════════════════
-
-# NSE Sectoral Indices — Yahoo Finance symbols
-SECTOR_INDICES = {
-    "NIFTY BANK"       : "^NSEBANK",
-    "NIFTY IT"         : "^CNXIT",
-    "NIFTY PHARMA"     : "^CNXPHARMA",
-    "NIFTY AUTO"       : "^CNXAUTO",
-    "NIFTY FMCG"       : "^CNXFMCG",
-    "NIFTY METAL"      : "^CNXMETAL",
-    "NIFTY REALTY"     : "^CNXREALTY",
-    "NIFTY ENERGY"     : "^CNXENERGY",
-    "NIFTY PSU BANK"   : "^CNXPSUBANK",
-    "NIFTY FIN SERVICE": "^CNXFINANCE",
-    "NIFTY INFRA"      : "^CNXINFRA",
-    "NIFTY OIL & GAS"  : "^CNXOILGAS",
-    "NIFTY HEALTHCARE" : "^CNXHEALTH",
-    "NIFTY MEDIA"      : "^CNXMEDIA",
-}
-
-# Stock → Sector mapping (primary sector per stock)
-STOCK_SECTOR_MAP = {
-    # Banking & Finance
-    "HDFCBANK"   : "NIFTY BANK",
-    "ICICIBANK"  : "NIFTY BANK",
-    "AXISBANK"   : "NIFTY BANK",
-    "KOTAKBANK"  : "NIFTY BANK",
-    "SBIN"       : "NIFTY PSU BANK",
-    "BANKBARODA" : "NIFTY PSU BANK",
-    "PNB"        : "NIFTY PSU BANK",
-    "CANBK"      : "NIFTY PSU BANK",
-    "BAJFINANCE" : "NIFTY FIN SERVICE",
-    "BAJAJFINSV" : "NIFTY FIN SERVICE",
-    "HDFCLIFE"   : "NIFTY FIN SERVICE",
-    "SBILIFE"    : "NIFTY FIN SERVICE",
-    "INDUSINDBK" : "NIFTY BANK",
-    # IT
-    "INFY"       : "NIFTY IT",
-    "TCS"        : "NIFTY IT",
-    "WIPRO"      : "NIFTY IT",
-    "HCLTECH"    : "NIFTY IT",
-    "TECHM"      : "NIFTY IT",
-    "LTIM"       : "NIFTY IT",
-    "MPHASIS"    : "NIFTY IT",
-    "PERSISTENT" : "NIFTY IT",
-    # Pharma & Healthcare
-    "SUNPHARMA"  : "NIFTY PHARMA",
-    "DRREDDY"    : "NIFTY PHARMA",
-    "CIPLA"      : "NIFTY PHARMA",
-    "DIVISLAB"   : "NIFTY PHARMA",
-    "APOLLOHOSP" : "NIFTY HEALTHCARE",
-    "MAXHEALTH"  : "NIFTY HEALTHCARE",
-    # Auto
-    "TATAMOTORS" : "NIFTY AUTO",
-    "MARUTI"     : "NIFTY AUTO",
-    "EICHERMOT"  : "NIFTY AUTO",
-    "HEROMOTOCO" : "NIFTY AUTO",
-    "BAJAJ-AUTO" : "NIFTY AUTO",
-    "M&M"        : "NIFTY AUTO",
-    # FMCG
-    "HINDUNILVR" : "NIFTY FMCG",
-    "NESTLEIND"  : "NIFTY FMCG",
-    "BRITANNIA"  : "NIFTY FMCG",
-    "TATACONSUM" : "NIFTY FMCG",
-    "GODREJCP"   : "NIFTY FMCG",
-    # Metals
-    "TATASTEEL"  : "NIFTY METAL",
-    "JSWSTEEL"   : "NIFTY METAL",
-    "HINDALCO"   : "NIFTY METAL",
-    "COALINDIA"  : "NIFTY METAL",
-    "NMDC"       : "NIFTY METAL",
-    "VEDL"       : "NIFTY METAL",
-    # Energy & Oil
-    "RELIANCE"   : "NIFTY OIL & GAS",
-    "ONGC"       : "NIFTY OIL & GAS",
-    "BPCL"       : "NIFTY OIL & GAS",
-    "IOC"        : "NIFTY OIL & GAS",
-    "GAIL"       : "NIFTY OIL & GAS",
-    "NTPC"       : "NIFTY ENERGY",
-    "POWERGRID"  : "NIFTY ENERGY",
-    "ADANIGREEN" : "NIFTY ENERGY",
-    # Infra & Real Estate
-    "LT"         : "NIFTY INFRA",
-    "ADANIPORTS" : "NIFTY INFRA",
-    "ADANIENT"   : "NIFTY INFRA",
-    "DLF"        : "NIFTY REALTY",
-    "GODREJPROP" : "NIFTY REALTY",
-    # Consumer / Others
-    "ASIANPAINT" : "NIFTY FMCG",
-    "TITAN"      : "NIFTY FMCG",
-    "ULTRACEMCO" : "NIFTY INFRA",
-    "SHREECEM"   : "NIFTY INFRA",
-    "GRASIM"     : "NIFTY INFRA",
-    # Media
-    "ZEEL"       : "NIFTY MEDIA",
-    "SUNTV"      : "NIFTY MEDIA",
-}
 
 def get_sector_bias():
     """
