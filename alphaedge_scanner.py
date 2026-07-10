@@ -26,7 +26,7 @@ TELEGRAM_CHAT_ID   = "922553974"
 
 # Timeframes (in minutes)
 HTF_MINUTES = 15
-MTF_MINUTES = 3
+MTF_MINUTES = 5
 
 # EMA Length (same as AlphaEdge V3)
 EMA_LENGTH = 21
@@ -108,10 +108,10 @@ def get_fo_stocks():
         "HDFCAMC","PIIND","ALKEM","AUROPHARMA","BIOCON",
         "BERGEPAINT","HAVELLS","VOLTAS","WHIRLPOOL","PAGEIND",
         "JUBLFOOD","TRENT","NYKAA","DMART","ZOMATO",
-        "PAYTM","IRFC","RAILTEL","HAL","BEL",
-        "SAIL","MOIL","RECLTD","PFC","NHPC",
-        "TORNTPHARM","LUPIN","ABBOTINDIA","GLAXO","PFIZER",
-        "BOSCHLTD","MOTHERSON","BALKRISIND","APOLLOTYRE","MRF"
+        "IRFC","HAL","BEL",
+        "SAIL","RECLTD","PFC",
+        "TORNTPHARM","LUPIN","ABBOTINDIA",
+        "MOTHERSON","BALKRISIND","MRF"
     ]
 
 def get_market_breadth():
@@ -355,7 +355,7 @@ def fetch_ohlcv(symbol, interval_minutes, period_days=10):
         yf_symbol = symbol + ".NS"
 
         interval_map = {
-            1: "1m", 2: "2m", 3: "3m", 5: "5m",
+            1: "1m", 2: "2m", 3: "5m", 5: "5m",
             15: "15m", 30: "30m", 60: "1h"
         }
         interval = interval_map.get(interval_minutes, "15m")
