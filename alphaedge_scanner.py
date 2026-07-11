@@ -190,10 +190,18 @@ def get_gainers_losers_volume(fo_stocks):
         # Add .NS suffix for Yahoo Finance
         yf_symbols = [s + ".NS" for s in fo_stocks]
 
-        # Download all at once
-        data = yf.download(
+        # Download daily for yesterday close + volume average
+        daily_data = yf.download(
             tickers=" ".join(yf_symbols),
             period="5d", interval="1d",
+            group_by="ticker",
+            auto_adjust=True, progress=False
+        )
+
+        # Download intraday for current price + today volume
+        intraday_data = yf.download(
+            tickers=" ".join(yf_symbols),
+            period="1d", interval="5m",
             group_by="ticker",
             auto_adjust=True, progress=False
         )
@@ -202,18 +210,26 @@ def get_gainers_losers_volume(fo_stocks):
         for symbol in fo_stocks:
             yf_sym = symbol + ".NS"
             try:
-                df = data[yf_sym]
-                closes = df["Close"].dropna()
-                volumes = df["Volume"].dropna()
+                daily    = daily_data[yf_sym]
+                intraday = intraday_data[yf_sym]
+
+                closes  = daily["Close"].dropna()
+                volumes = daily["Volume"].dropna()
 
                 if len(closes) < 2:
                     continue
 
-                prev_close  = closes.iloc[-2]
-                today_close = closes.iloc[-1]
-                pct_change  = ((today_close - prev_close) / prev_close) * 100
+                # Yesterday close
+                prev_close = closes.iloc[-2]
 
-                today_vol = volumes.iloc[-1]
+                # Current price from intraday
+                intra_closes = intraday["Close"].dropna() if not intraday.empty else closes
+                today_close  = intra_closes.iloc[-1] if not intra_closes.empty else closes.iloc[-1]
+
+                pct_change = ((today_close - prev_close) / prev_close) * 100
+
+                # Volume — today vs average
+                today_vol = intraday["Volume"].sum() if not intraday.empty else volumes.iloc[-1]
                 avg_vol   = volumes.iloc[:-1].mean()
                 vol_ratio = today_vol / avg_vol if avg_vol > 0 else 1.0
 
@@ -301,21 +317,33 @@ def get_sector_bias():
     for sector_name, yf_symbol in SECTOR_INDICES.items():
         try:
             ticker = yf.Ticker(yf_symbol)
-            df = ticker.history(period="5d", interval="15m")
 
-            if df is None or df.empty:
+            # Get today's intraday data for current % change
+            intraday = ticker.history(period="1d", interval="5m")
+
+            # Get yesterday's close for accurate % change calculation
+            daily = ticker.history(period="5d", interval="1d")
+
+            if intraday is None or intraday.empty or daily is None or len(daily) < 2:
                 sector_data[sector_name] = {
                     "bias": "NEUTRAL", "pct_change": 0.0, "ema_bias": "NEUTRAL"
                 }
                 continue
 
-            df = df.rename(columns={"Close": "close"})
-            current_price = df["close"].iloc[-1]
-            prev_close    = df["close"].iloc[0]
-            pct_change    = ((current_price - prev_close) / prev_close) * 100
+            intraday = intraday.rename(columns={"Close": "close"})
+            daily    = daily.rename(columns={"Close": "close"})
 
-            # EMA 21 on 15min
-            ema = df["close"].ewm(span=21, adjust=False).mean().iloc[-1]
+            # Current price = latest intraday close
+            current_price = intraday["close"].iloc[-1]
+
+            # Previous close = yesterday's daily close
+            prev_close = daily["close"].iloc[-2]
+
+            # % change from yesterday close to now = matches TradingView
+            pct_change = ((current_price - prev_close) / prev_close) * 100
+
+            # EMA 21 on 5min intraday
+            ema = intraday["close"].ewm(span=21, adjust=False).mean().iloc[-1]
             ema_bias = "BUY" if current_price > ema else "SELL"
 
             # Bias by % change
