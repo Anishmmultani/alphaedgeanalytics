@@ -504,6 +504,144 @@ def get_key_levels(symbol):
         log.error(f"Key levels failed for {symbol}: {e}")
         return None, None
 
+
+# ═══════════════════════════════════════════════════════════════
+# SECTION 8A — PREVIOUS DAY HIGH/LOW
+# ═══════════════════════════════════════════════════════════════
+
+def get_pdh_pdl(symbol):
+    """
+    Get Previous Day High and Low
+    Also get today's intraday high/low for bounce/fall detection
+    """
+    try:
+        import yfinance as yf
+        ticker  = yf.Ticker(symbol + ".NS")
+
+        # Daily data for PDH/PDL
+        daily   = ticker.history(period="5d", interval="1d")
+        if daily is None or len(daily) < 2:
+            return None, None, None, None
+
+        daily = daily.rename(columns={"High": "high", "Low": "low", "Close": "close"})
+        prev_day_high = daily["high"].iloc[-2]
+        prev_day_low  = daily["low"].iloc[-2]
+
+        # Today's intraday data for current high/low
+        intraday = ticker.history(period="1d", interval="5m")
+        if intraday is None or intraday.empty:
+            return prev_day_high, prev_day_low, None, None
+
+        intraday = intraday.rename(columns={"High": "high", "Low": "low", "Close": "close"})
+        today_high = intraday["high"].max()
+        today_low  = intraday["low"].min()
+
+        return prev_day_high, prev_day_low, today_high, today_low
+
+    except Exception as e:
+        log.error(f"PDH/PDL failed for {symbol}: {e}")
+        return None, None, None, None
+
+def get_mtf_swing(symbol):
+    """
+    Get latest MTF (5min) Swing High and Swing Low
+    For PDL bounce and PDH fall confirmation
+    """
+    try:
+        import yfinance as yf
+        ticker = yf.Ticker(symbol + ".NS")
+        df     = ticker.history(period="5d", interval="5m")
+
+        if df is None or df.empty or len(df) < 10:
+            return None, None
+
+        df = df.rename(columns={"High": "high", "Low": "low", "Close": "close"})
+        highs = df["high"]
+        lows  = df["low"]
+
+        # Latest swing high — bar whose high > 2 bars each side
+        swing_high = None
+        swing_low  = None
+
+        for i in range(2, len(highs) - 2):
+            if highs.iloc[i] > highs.iloc[i-1] and highs.iloc[i] > highs.iloc[i-2] and                highs.iloc[i] > highs.iloc[i+1] and highs.iloc[i] > highs.iloc[i+2]:
+                swing_high = highs.iloc[i]
+
+        for i in range(2, len(lows) - 2):
+            if lows.iloc[i] < lows.iloc[i-1] and lows.iloc[i] < lows.iloc[i-2] and                lows.iloc[i] < lows.iloc[i+1] and lows.iloc[i] < lows.iloc[i+2]:
+                swing_low = lows.iloc[i]
+
+        return swing_high, swing_low
+
+    except Exception as e:
+        log.error(f"MTF Swing failed for {symbol}: {e}")
+        return None, None
+
+# ═══════════════════════════════════════════════════════════════
+# SECTION 8B — ORB (Opening Range Breakout — 9:15 to 9:20)
+# ═══════════════════════════════════════════════════════════════
+
+def get_orb(symbol):
+    """
+    Get Opening Range Breakout levels
+    ORB = High and Low of first 5min candle (9:15-9:20 IST)
+    """
+    try:
+        import yfinance as yf
+        ticker   = yf.Ticker(symbol + ".NS")
+        intraday = ticker.history(period="1d", interval="5m")
+
+        if intraday is None or intraday.empty:
+            return None, None
+
+        intraday = intraday.rename(columns={"High": "high", "Low": "low"})
+
+        # First candle = opening range
+        orb_high = intraday["high"].iloc[0]
+        orb_low  = intraday["low"].iloc[0]
+
+        return orb_high, orb_low
+
+    except Exception as e:
+        log.error(f"ORB failed for {symbol}: {e}")
+        return None, None
+
+# ═══════════════════════════════════════════════════════════════
+# SECTION 8C — RSI (5min MTF)
+# ═══════════════════════════════════════════════════════════════
+
+def get_rsi(symbol, period=14):
+    """
+    Calculate RSI on MTF (5min)
+    RSI < 40 = oversold  = BUY confirmation
+    RSI > 60 = overbought = SELL confirmation
+    """
+    try:
+        import yfinance as yf
+        ticker = yf.Ticker(symbol + ".NS")
+        df     = ticker.history(period="5d", interval="5m")
+
+        if df is None or df.empty or len(df) < period + 1:
+            return None
+
+        df     = df.rename(columns={"Close": "close"})
+        closes = df["close"]
+
+        # RSI calculation
+        delta  = closes.diff()
+        gain   = delta.where(delta > 0, 0.0)
+        loss   = -delta.where(delta < 0, 0.0)
+        avg_gain = gain.ewm(span=period, adjust=False).mean()
+        avg_loss = loss.ewm(span=period, adjust=False).mean()
+        rs       = avg_gain / avg_loss
+        rsi      = 100 - (100 / (1 + rs))
+
+        return round(rsi.iloc[-1], 2)
+
+    except Exception as e:
+        log.error(f"RSI failed for {symbol}: {e}")
+        return None
+
 # ═══════════════════════════════════════════════════════════════
 # SECTION 8 — STRENGTH CALCULATION
 # Replicates AlphaEdge V3 Strength logic exactly
@@ -542,9 +680,12 @@ def calculate_strength(ema_htf_bias, ema_mtf_bias):
 
 def calculate_score(symbol, market_bias, gainers, losers,
                     shockers, ema_htf_bias, ema_mtf_bias,
-                    current_price, support, resistance, sector_data):
+                    current_price, support, resistance, sector_data,
+                    pdh=None, pdl=None, today_high=None, today_low=None,
+                    orb_high=None, orb_low=None, rsi=None,
+                    mtf_swing_high=None, mtf_swing_low=None):
     """
-    Calculate confluence score 0-8:
+    Calculate confluence score 0-11:
     +1 Market bias matches direction
     +1 Sector bias matches direction
     +1 Sector EMA confirms direction
@@ -553,6 +694,9 @@ def calculate_score(symbol, market_bias, gainers, losers,
     +1 EMA HTF confirms
     +1 EMA MTF confirms
     +1 Price near Key Zone
+    +1 PDH/PDL (breakout/breakdown OR bounce/fall with MTF swing confirmation)
+    +1 ORB breakout/breakdown or bounce/fall
+    +1 RSI confirmation (< 40 for BUY, > 60 for SELL)
     """
     score     = 0
     direction = "NEUTRAL"
@@ -632,7 +776,6 @@ def calculate_score(symbol, market_bias, gainers, losers,
         reasons.append(f"EMA MTF {ema_mtf_bias} ✅")
 
     # +1 Price near key zone (within 0.5%)
-    # Phase 2: replaced with full OB Zone logic
     if current_price and support and resistance:
         zone_pct = 0.005
         if direction == "BUY" and support:
@@ -643,6 +786,69 @@ def calculate_score(symbol, market_bias, gainers, losers,
             if abs(current_price - resistance) / current_price <= zone_pct:
                 score += 1
                 reasons.append("Near Resistance Zone ✅")
+
+    # +1 PDH/PDL logic
+    if pdh and pdl and today_high and today_low and current_price:
+        pdh_pdl_ok = False
+
+        if direction == "BUY":
+            # Breakout above PDH
+            if current_price > pdh:
+                pdh_pdl_ok = True
+                reasons.append(f"Above PDH {pdh:.2f} ✅")
+            # Bounce from PDL + MTF swing high breakout
+            elif today_low <= pdl * 1.002 and mtf_swing_high and current_price > mtf_swing_high:
+                pdh_pdl_ok = True
+                reasons.append(f"PDL Bounce + MTF Swing Break ✅")
+
+        elif direction == "SELL":
+            # Breakdown below PDL
+            if current_price < pdl:
+                pdh_pdl_ok = True
+                reasons.append(f"Below PDL {pdl:.2f} ✅")
+            # Fall from PDH + MTF swing low breakdown
+            elif today_high >= pdh * 0.998 and mtf_swing_low and current_price < mtf_swing_low:
+                pdh_pdl_ok = True
+                reasons.append(f"PDH Fall + MTF Swing Break ✅")
+
+        if pdh_pdl_ok:
+            score += 1
+
+    # +1 ORB (Opening Range Breakout 9:15-9:20)
+    if orb_high and orb_low and current_price and today_high and today_low:
+        orb_ok = False
+
+        if direction == "BUY":
+            # Breakout above ORB High
+            if current_price > orb_high:
+                orb_ok = True
+                reasons.append(f"Above ORB High {orb_high:.2f} ✅")
+            # Bounce from ORB Low
+            elif today_low <= orb_low * 1.001 and current_price > orb_low:
+                orb_ok = True
+                reasons.append(f"ORB Low Bounce ✅")
+
+        elif direction == "SELL":
+            # Breakdown below ORB Low
+            if current_price < orb_low:
+                orb_ok = True
+                reasons.append(f"Below ORB Low {orb_low:.2f} ✅")
+            # Fall from ORB High
+            elif today_high >= orb_high * 0.999 and current_price < orb_high:
+                orb_ok = True
+                reasons.append(f"ORB High Fall ✅")
+
+        if orb_ok:
+            score += 1
+
+    # +1 RSI confirmation (5min MTF)
+    if rsi is not None:
+        if direction == "BUY" and rsi < 40:
+            score += 1
+            reasons.append(f"RSI Oversold {rsi:.1f} ✅")
+        elif direction == "SELL" and rsi > 60:
+            score += 1
+            reasons.append(f"RSI Overbought {rsi:.1f} ✅")
 
     return score, direction, strength, reasons, sector_name or "N/A", sector_bias_str
 
@@ -690,13 +896,20 @@ def run_scan():
     results = []
     for symbol in candidates:
         log.info(f"Scanning {symbol}...")
-        ema_htf, ema_mtf, price = get_ema_bias(symbol)
-        support, resistance      = get_key_levels(symbol)
+        ema_htf, ema_mtf, price  = get_ema_bias(symbol)
+        support, resistance       = get_key_levels(symbol)
+        pdh, pdl, t_high, t_low  = get_pdh_pdl(symbol)
+        orb_high, orb_low         = get_orb(symbol)
+        rsi                       = get_rsi(symbol)
+        mtf_s_high, mtf_s_low     = get_mtf_swing(symbol)
 
         score, direction, strength, reasons, sector_name, sector_bias = calculate_score(
             symbol, market_bias, gainers, losers,
             shockers, ema_htf, ema_mtf, price,
-            support, resistance, sector_data
+            support, resistance, sector_data,
+            pdh=pdh, pdl=pdl, today_high=t_high, today_low=t_low,
+            orb_high=orb_high, orb_low=orb_low, rsi=rsi,
+            mtf_swing_high=mtf_s_high, mtf_swing_low=mtf_s_low
         )
 
         if score >= MIN_SCORE_TO_ALERT:
@@ -744,8 +957,8 @@ def run_scan():
         msg += "🔍 No high confluence setups found.\n"
         msg += "Waiting for next scan...\n"
     else:
-        high   = [r for r in results if r["score"] >= 6]
-        medium = [r for r in results if 4 <= r["score"] <= 5]
+        high   = [r for r in results if r["score"] >= 8]
+        medium = [r for r in results if 5 <= r["score"] <= 7]
 
         if high:
             msg += "🔥 <b>HIGH PRIORITY SETUPS:</b>\n\n"
@@ -771,7 +984,7 @@ def run_scan():
                 msg += f"- {d_emoji} {r['symbol']} Rs.{r['price']:.2f} "
                 msg += f"| {r['strength']} "
                 msg += f"| {s_emoji} {r['sector_name']} "
-                msg += f"| Score {r['score']}/8\n"
+                msg += f"| Score {r['score']}/11\n"
 
     msg += f"\n━━━━━━━━━━━━━━━━━━━━\n"
     msg += f"Verify zones on AlphaEdge V3 before entering any trade!"
