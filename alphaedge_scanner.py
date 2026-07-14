@@ -143,9 +143,11 @@ def get_market_breadth():
             "TCS.NS","TECHM.NS","TITAN.NS","ULTRACEMCO.NS","WIPRO.NS"
         ]
 
+        # 5day 5min — single call, accurate intraday % change
+        import pandas as pd
         data = yf.download(
             tickers=" ".join(nifty50),
-            period="2d", interval="1d",
+            period="5d", interval="5m",
             group_by="ticker",
             auto_adjust=True, progress=False
         )
@@ -155,13 +157,22 @@ def get_market_breadth():
         for stock in nifty50:
             try:
                 closes = data[stock]["Close"].dropna()
-                if len(closes) >= 2:
-                    chg = closes.iloc[-1] - closes.iloc[-2]
-                    if chg > 0:   advances  += 1
-                    elif chg < 0: declines  += 1
-                    else:         unchanged += 1
+                if closes.empty:
+                    continue
+                closes.index = closes.index.tz_convert("Asia/Kolkata")
+                curr_date     = closes.index[-1].date()
+                current_price = closes.iloc[-1]
+                prev_data     = closes[closes.index.date < curr_date]
+                if prev_data.empty:
+                    continue
+                prev_close = prev_data.iloc[-1]
+                chg = current_price - prev_close
+                if chg > 0:   advances  += 1
+                elif chg < 0: declines  += 1
+                else:         unchanged += 1
             except:
                 continue
+
 
         total = advances + declines + unchanged
         if total == 0:
@@ -190,7 +201,16 @@ def get_gainers_losers_volume(fo_stocks):
         # Add .NS suffix for Yahoo Finance
         yf_symbols = [s + ".NS" for s in fo_stocks]
 
-        # Download daily for yesterday close + volume average
+        # 5day 5min — single call for accurate intraday % change
+        import pandas as pd
+        data5m = yf.download(
+            tickers=" ".join(yf_symbols),
+            period="5d", interval="5m",
+            group_by="ticker",
+            auto_adjust=True, progress=False
+        )
+
+        # Also get daily for volume average
         daily_data = yf.download(
             tickers=" ".join(yf_symbols),
             period="5d", interval="1d",
@@ -198,50 +218,47 @@ def get_gainers_losers_volume(fo_stocks):
             auto_adjust=True, progress=False
         )
 
-        # Download intraday for current price + today volume
-        intraday_data = yf.download(
-            tickers=" ".join(yf_symbols),
-            period="1d", interval="5m",
-            group_by="ticker",
-            auto_adjust=True, progress=False
-        )
-
+        stocks_data = []
         stocks_data = []
         for symbol in fo_stocks:
             yf_sym = symbol + ".NS"
             try:
-                daily    = daily_data[yf_sym]
-                intraday = intraday_data[yf_sym]
-
-                closes  = daily["Close"].dropna()
-                volumes = daily["Volume"].dropna()
-
-                if len(closes) < 2:
+                closes5m = data5m[yf_sym]["Close"].dropna()
+                if closes5m.empty:
                     continue
 
-                # Yesterday close
-                prev_close = closes.iloc[-2]
+                closes5m.index = closes5m.index.tz_convert("Asia/Kolkata")
+                curr_date     = closes5m.index[-1].date()
+                current_price = closes5m.iloc[-1]
 
-                # Current price from intraday
-                intra_closes = intraday["Close"].dropna() if not intraday.empty else closes
-                today_close  = intra_closes.iloc[-1] if not intra_closes.empty else closes.iloc[-1]
+                # Previous day last price
+                prev_data  = closes5m[closes5m.index.date < curr_date]
+                if prev_data.empty:
+                    continue
+                prev_close = prev_data.iloc[-1]
+                pct_change = ((current_price - prev_close) / prev_close) * 100
 
-                pct_change = ((today_close - prev_close) / prev_close) * 100
-
-                # Volume — today vs average
-                today_vol = intraday["Volume"].sum() if not intraday.empty else volumes.iloc[-1]
-                avg_vol   = volumes.iloc[:-1].mean()
-                vol_ratio = today_vol / avg_vol if avg_vol > 0 else 1.0
+                # Volume from daily data
+                try:
+                    daily   = daily_data[yf_sym]
+                    volumes = daily["Volume"].dropna()
+                    today_vol = closes5m[closes5m.index.date == curr_date].shape[0]  # bars today
+                    avg_vol   = volumes.iloc[:-1].mean()
+                    vol_ratio = float(volumes.iloc[-1]) / float(avg_vol) if avg_vol > 0 else 1.0
+                except:
+                    vol_ratio = 1.0
 
                 stocks_data.append({
                     "symbol"    : symbol,
-                    "price"     : round(today_close, 2),
-                    "pct_change": round(pct_change, 2),
-                    "volume"    : today_vol,
-                    "avg_volume": avg_vol,
-                    "vol_ratio" : round(vol_ratio, 2)
+                    "price"     : round(float(current_price), 2),
+                    "pct_change": round(float(pct_change), 2),
+                    "volume"    : 0,
+                    "avg_volume": 0,
+                    "vol_ratio" : round(float(vol_ratio), 2)
                 })
             except:
+                continue
+
                 continue
 
         if not stocks_data:
@@ -318,32 +335,40 @@ def get_sector_bias():
         try:
             ticker = yf.Ticker(yf_symbol)
 
-            # Get today's intraday data for current % change
-            intraday = ticker.history(period="1d", interval="5m")
+            # Use 5day 5min data — single call gives both current + prev close
+            # More reliable than mixing daily + intraday calls
+            df5 = ticker.history(period="5d", interval="5m")
 
-            # Get yesterday's close for accurate % change calculation
-            daily = ticker.history(period="5d", interval="1d")
-
-            if intraday is None or intraday.empty or daily is None or len(daily) < 2:
+            if df5 is None or df5.empty or len(df5) < 80:
                 sector_data[sector_name] = {
                     "bias": "NEUTRAL", "pct_change": 0.0, "ema_bias": "NEUTRAL"
                 }
                 continue
 
-            intraday = intraday.rename(columns={"Close": "close"})
-            daily    = daily.rename(columns={"Close": "close"})
+            df5 = df5.rename(columns={"Close": "close"})
+            df5.index = df5.index.tz_convert("Asia/Kolkata")
 
-            # Current price = latest intraday close
-            current_price = intraday["close"].iloc[-1]
+            # Current price = latest bar
+            current_price = df5["close"].iloc[-1]
+            current_date  = df5.index[-1].date()
 
-            # Previous close = yesterday's daily close
-            prev_close = daily["close"].iloc[-2]
+            # Previous close = last bar of PREVIOUS trading day
+            prev_day_data = df5[df5.index.date < current_date]
+            if prev_day_data.empty:
+                sector_data[sector_name] = {
+                    "bias": "NEUTRAL", "pct_change": 0.0, "ema_bias": "NEUTRAL"
+                }
+                continue
 
-            # % change from yesterday close to now = matches TradingView
+            prev_close = prev_day_data["close"].iloc[-1]
+
+            # % change from prev day last price to now = matches TradingView
             pct_change = ((current_price - prev_close) / prev_close) * 100
 
-            # EMA 21 on 5min intraday
-            ema = intraday["close"].ewm(span=21, adjust=False).mean().iloc[-1]
+            # EMA 21 on today's 5min bars
+            today_data = df5[df5.index.date == current_date]
+            ema_series = today_data["close"].ewm(span=21, adjust=False).mean() if not today_data.empty else df5["close"].ewm(span=21, adjust=False).mean()
+            ema      = ema_series.iloc[-1]
             ema_bias = "BUY" if current_price > ema else "SELL"
 
             # Bias by % change
