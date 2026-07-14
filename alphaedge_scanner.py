@@ -970,7 +970,7 @@ def run_scan():
                 msg += f"   Strength: <b>{r['strength']}</b>\n"
                 msg += f"   Sector: {s_emoji} {r['sector_name']} ({r['sector_bias']})\n"
                 msg += f"   EMA HTF: {r['ema_htf']} | MTF: {r['ema_mtf']}\n"
-                msg += f"   Score: {r['score']}/8\n"
+                msg += f"   Score: {r['score']}/11\n"
                 for reason in r["reasons"]:
                     msg += f"   - {reason}\n"
                 msg += "\n"
