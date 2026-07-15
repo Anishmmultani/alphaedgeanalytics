@@ -534,104 +534,107 @@ def get_key_levels(symbol):
 # SECTION 8A — PREVIOUS DAY HIGH/LOW
 # ═══════════════════════════════════════════════════════════════
 
-def get_pdh_pdl(symbol):
+def get_pdh_pdl_orb_clusters(symbol):
     """
-    Get Previous Day High and Low
-    Also get today's intraday high/low for bounce/fall detection
-    """
-    try:
-        import yfinance as yf
-        ticker  = yf.Ticker(symbol + ".NS")
-
-        # Daily data for PDH/PDL
-        daily   = ticker.history(period="5d", interval="1d")
-        if daily is None or len(daily) < 2:
-            return None, None, None, None
-
-        daily = daily.rename(columns={"High": "high", "Low": "low", "Close": "close"})
-        prev_day_high = daily["high"].iloc[-2]
-        prev_day_low  = daily["low"].iloc[-2]
-
-        # Today's intraday data for current high/low
-        intraday = ticker.history(period="1d", interval="5m")
-        if intraday is None or intraday.empty:
-            return prev_day_high, prev_day_low, None, None
-
-        intraday = intraday.rename(columns={"High": "high", "Low": "low", "Close": "close"})
-        today_high = intraday["high"].max()
-        today_low  = intraday["low"].min()
-
-        return prev_day_high, prev_day_low, today_high, today_low
-
-    except Exception as e:
-        log.error(f"PDH/PDL failed for {symbol}: {e}")
-        return None, None, None, None
-
-def get_mtf_swing(symbol):
-    """
-    Get latest MTF (5min) Swing High and Swing Low
-    For PDL bounce and PDH fall confirmation
+    Unified function — gets PDH, PDL, ORB levels AND
+    latest red/green cluster highs/lows using 5d 5min data
+    
+    Cluster logic (same as V4 Trade Engine):
+    - While falling to PDL/ORB Low: red candles form → latest red cluster high
+    - While rising to PDH/ORB High: green candles form → latest green cluster low
+    - Signal = price closes above red cluster high (bounce) or below green cluster low (fail)
     """
     try:
         import yfinance as yf
+        import pandas as pd
+
         ticker = yf.Ticker(symbol + ".NS")
-        df     = ticker.history(period="5d", interval="5m")
 
-        if df is None or df.empty or len(df) < 10:
-            return None, None
+        # 5day 5min data — single call for everything
+        df = ticker.history(period="5d", interval="5m")
+        if df is None or df.empty or len(df) < 20:
+            return None, None, None, None, None, None, None, None
 
-        df = df.rename(columns={"High": "high", "Low": "low", "Close": "close"})
-        highs = df["high"]
-        lows  = df["low"]
+        df = df.rename(columns={"High": "high", "Low": "low",
+                                 "Close": "close", "Open": "open"})
+        df.index = df.index.tz_convert("Asia/Kolkata")
 
-        # Latest swing high — bar whose high > 2 bars each side
-        swing_high = None
-        swing_low  = None
+        # ── PDH / PDL ──────────────────────────────────────────
+        today_date = df.index[-1].date()
+        prev_data  = df[df.index.date < today_date]
+        today_data = df[df.index.date == today_date]
 
-        for i in range(2, len(highs) - 2):
-            if highs.iloc[i] > highs.iloc[i-1] and highs.iloc[i] > highs.iloc[i-2] and                highs.iloc[i] > highs.iloc[i+1] and highs.iloc[i] > highs.iloc[i+2]:
-                swing_high = highs.iloc[i]
+        if prev_data.empty or today_data.empty:
+            return None, None, None, None, None, None, None, None
 
-        for i in range(2, len(lows) - 2):
-            if lows.iloc[i] < lows.iloc[i-1] and lows.iloc[i] < lows.iloc[i-2] and                lows.iloc[i] < lows.iloc[i+1] and lows.iloc[i] < lows.iloc[i+2]:
-                swing_low = lows.iloc[i]
+        pdh = float(prev_data["high"].max())
+        pdl = float(prev_data["low"].min())
 
-        return swing_high, swing_low
+        # ── ORB — first 5min candle of today ────────────────────
+        orb_high = float(today_data["high"].iloc[0])
+        orb_low  = float(today_data["low"].iloc[0])
+
+        # ── CLUSTER DETECTION on today's data ───────────────────
+        # Latest red cluster high — for bounce signals (PDL/ORB Low bounce)
+        # Logic: Find consecutive red candles → take highest high
+        # Reset on green candle → start new cluster
+        # Keep LATEST completed cluster
+
+        latest_red_cluster_high  = None
+        latest_green_cluster_low = None
+
+        running_red_high   = None
+        running_green_low  = None
+        in_red_cluster     = False
+        in_green_cluster   = False
+
+        for idx in range(len(today_data)):
+            row = today_data.iloc[idx]
+            is_green = row["close"] > row["open"]
+            is_red   = row["close"] < row["open"]
+
+            if is_red:
+                if not in_red_cluster:
+                    running_red_high = row["high"]
+                    in_red_cluster   = True
+                else:
+                    running_red_high = max(running_red_high, row["high"])
+                # Green cluster ended
+                if in_green_cluster:
+                    latest_green_cluster_low = running_green_low
+                in_green_cluster  = False
+                running_green_low = None
+
+            elif is_green:
+                if not in_green_cluster:
+                    running_green_low = row["low"]
+                    in_green_cluster  = True
+                else:
+                    running_green_low = min(running_green_low, row["low"])
+                # Red cluster ended
+                if in_red_cluster:
+                    latest_red_cluster_high = running_red_high
+                in_red_cluster   = False
+                running_red_high = None
+
+        # If currently in a cluster use running value too
+        if in_red_cluster and running_red_high:
+            latest_red_cluster_high = running_red_high
+        if in_green_cluster and running_green_low:
+            latest_green_cluster_low = running_green_low
+
+        current_price = float(today_data["close"].iloc[-1])
+        today_low     = float(today_data["low"].min())
+        today_high    = float(today_data["high"].max())
+
+        return (pdh, pdl, orb_high, orb_low,
+                latest_red_cluster_high, latest_green_cluster_low,
+                today_high, today_low)
 
     except Exception as e:
-        log.error(f"MTF Swing failed for {symbol}: {e}")
-        return None, None
+        log.error(f"PDH/PDL/ORB/Cluster failed for {symbol}: {e}")
+        return None, None, None, None, None, None, None, None
 
-# ═══════════════════════════════════════════════════════════════
-# SECTION 8B — ORB (Opening Range Breakout — 9:15 to 9:20)
-# ═══════════════════════════════════════════════════════════════
-
-def get_orb(symbol):
-    """
-    Get Opening Range Breakout levels
-    ORB = High and Low of first 5min candle (9:15-9:20 IST)
-    """
-    try:
-        import yfinance as yf
-        ticker   = yf.Ticker(symbol + ".NS")
-        intraday = ticker.history(period="1d", interval="5m")
-
-        if intraday is None or intraday.empty:
-            return None, None
-
-        intraday = intraday.rename(columns={"High": "high", "Low": "low"})
-
-        # First candle = opening range
-        orb_high = intraday["high"].iloc[0]
-        orb_low  = intraday["low"].iloc[0]
-
-        return orb_high, orb_low
-
-    except Exception as e:
-        log.error(f"ORB failed for {symbol}: {e}")
-        return None, None
-
-# ═══════════════════════════════════════════════════════════════
 # SECTION 8C — RSI (5min MTF)
 # ═══════════════════════════════════════════════════════════════
 
@@ -706,9 +709,9 @@ def calculate_strength(ema_htf_bias, ema_mtf_bias):
 def calculate_score(symbol, market_bias, gainers, losers,
                     shockers, ema_htf_bias, ema_mtf_bias,
                     current_price, support, resistance, sector_data,
-                    pdh=None, pdl=None, today_high=None, today_low=None,
-                    orb_high=None, orb_low=None, rsi=None,
-                    mtf_swing_high=None, mtf_swing_low=None):
+                    pdh=None, pdl=None, orb_high=None, orb_low=None,
+                    red_cluster_high=None, green_cluster_low=None,
+                    today_high=None, today_low=None, rsi=None):
     """
     Calculate confluence score 0-11:
     +1 Market bias matches direction
@@ -812,56 +815,62 @@ def calculate_score(symbol, market_bias, gainers, losers,
                 score += 1
                 reasons.append("Near Resistance Zone ✅")
 
-    # +1 PDH/PDL logic
+    # +1 PDH/PDL — cluster-based confirmation
+    # BUY:  Price touches PDL + closes above latest red cluster high (formed while falling)
+    # SELL: Price touches PDH + closes below latest green cluster low (formed while rising)
+    # Also: Simple breakout above PDH or breakdown below PDL
     if pdh and pdl and today_high and today_low and current_price:
         pdh_pdl_ok = False
 
         if direction == "BUY":
-            # Breakout above PDH
+            # Simple breakout above PDH
             if current_price > pdh:
                 pdh_pdl_ok = True
                 reasons.append(f"Above PDH {pdh:.2f} ✅")
-            # Bounce from PDL + MTF swing high breakout
-            elif today_low <= pdl * 1.002 and mtf_swing_high and current_price > mtf_swing_high:
+            # PDL Bounce: price touched PDL AND closed above latest red cluster high
+            elif today_low <= pdl * 1.002 and red_cluster_high and current_price > red_cluster_high:
                 pdh_pdl_ok = True
-                reasons.append(f"PDL Bounce + MTF Swing Break ✅")
+                reasons.append(f"PDL Bounce + Cluster Break {red_cluster_high:.2f} ✅")
 
         elif direction == "SELL":
-            # Breakdown below PDL
+            # Simple breakdown below PDL
             if current_price < pdl:
                 pdh_pdl_ok = True
                 reasons.append(f"Below PDL {pdl:.2f} ✅")
-            # Fall from PDH + MTF swing low breakdown
-            elif today_high >= pdh * 0.998 and mtf_swing_low and current_price < mtf_swing_low:
+            # PDH Fail: price touched PDH AND closed below latest green cluster low
+            elif today_high >= pdh * 0.998 and green_cluster_low and current_price < green_cluster_low:
                 pdh_pdl_ok = True
-                reasons.append(f"PDH Fall + MTF Swing Break ✅")
+                reasons.append(f"PDH Fail + Cluster Break {green_cluster_low:.2f} ✅")
 
         if pdh_pdl_ok:
             score += 1
 
-    # +1 ORB (Opening Range Breakout 9:15-9:20)
+    # +1 ORB — same cluster-based confirmation
+    # BUY:  Price touches ORB Low + closes above latest red cluster high
+    # SELL: Price touches ORB High + closes below latest green cluster low
+    # Also: Simple breakout/breakdown of ORB range
     if orb_high and orb_low and current_price and today_high and today_low:
         orb_ok = False
 
         if direction == "BUY":
-            # Breakout above ORB High
+            # Simple breakout above ORB High
             if current_price > orb_high:
                 orb_ok = True
                 reasons.append(f"Above ORB High {orb_high:.2f} ✅")
-            # Bounce from ORB Low
-            elif today_low <= orb_low * 1.001 and current_price > orb_low:
+            # ORB Low Bounce: price touched ORB Low AND closed above latest red cluster high
+            elif today_low <= orb_low * 1.001 and red_cluster_high and current_price > red_cluster_high:
                 orb_ok = True
-                reasons.append(f"ORB Low Bounce ✅")
+                reasons.append(f"ORB Low Bounce + Cluster Break {red_cluster_high:.2f} ✅")
 
         elif direction == "SELL":
-            # Breakdown below ORB Low
+            # Simple breakdown below ORB Low
             if current_price < orb_low:
                 orb_ok = True
                 reasons.append(f"Below ORB Low {orb_low:.2f} ✅")
-            # Fall from ORB High
-            elif today_high >= orb_high * 0.999 and current_price < orb_high:
+            # ORB High Fail: price touched ORB High AND closed below latest green cluster low
+            elif today_high >= orb_high * 0.999 and green_cluster_low and current_price < green_cluster_low:
                 orb_ok = True
-                reasons.append(f"ORB High Fall ✅")
+                reasons.append(f"ORB High Fail + Cluster Break {green_cluster_low:.2f} ✅")
 
         if orb_ok:
             score += 1
@@ -923,18 +932,21 @@ def run_scan():
         log.info(f"Scanning {symbol}...")
         ema_htf, ema_mtf, price  = get_ema_bias(symbol)
         support, resistance       = get_key_levels(symbol)
-        pdh, pdl, t_high, t_low  = get_pdh_pdl(symbol)
-        orb_high, orb_low         = get_orb(symbol)
         rsi                       = get_rsi(symbol)
-        mtf_s_high, mtf_s_low     = get_mtf_swing(symbol)
+
+        # Unified call — PDH/PDL/ORB/Clusters in one shot
+        pdh, pdl, orb_high, orb_low,         red_cl_high, green_cl_low,         t_high, t_low             = get_pdh_pdl_orb_clusters(symbol)
 
         score, direction, strength, reasons, sector_name, sector_bias = calculate_score(
             symbol, market_bias, gainers, losers,
             shockers, ema_htf, ema_mtf, price,
             support, resistance, sector_data,
-            pdh=pdh, pdl=pdl, today_high=t_high, today_low=t_low,
-            orb_high=orb_high, orb_low=orb_low, rsi=rsi,
-            mtf_swing_high=mtf_s_high, mtf_swing_low=mtf_s_low
+            pdh=pdh, pdl=pdl,
+            orb_high=orb_high, orb_low=orb_low,
+            red_cluster_high=red_cl_high,
+            green_cluster_low=green_cl_low,
+            today_high=t_high, today_low=t_low,
+            rsi=rsi
         )
 
         if score >= MIN_SCORE_TO_ALERT:
